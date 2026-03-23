@@ -7,7 +7,7 @@
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🔍🧾</text></svg>">
     
-    <!-- Librería con soporte para ESTILOS -->
+    <!-- Librería con soporte para ESTILOS (xlsx-js-style) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -37,7 +37,7 @@
         <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Agrupar Gastos</h1>
-            <p class="text-slate-600 font-medium">Split de Restaurantes (8.5% / 91.5%) - Conservando Colores Originales</p>
+            <p class="text-slate-600 font-medium tracking-tight">Espejo de Lógica VBA - Split 8.5%/91.5% y Conservación de Colores</p>
         </div>
 
         <!-- Main Card -->
@@ -49,15 +49,15 @@
                     <svg class="w-16 h-16 text-amber-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
                     </svg>
-                    <p class="text-lg font-semibold text-slate-700">Suelte el archivo de Gastos aquí</p>
-                    <p class="text-sm text-slate-500 mt-1 text-center">Mantiene los colores de fondo de sus registros originales</p>
+                    <p class="text-lg font-semibold text-slate-700">Suelte el archivo original (Hoja DATOS) aquí</p>
+                    <p class="text-sm text-slate-500 mt-1">Se respetarán los colores de fondo de la columna AG</p>
                 </div>
                 <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .xlsm">
             </div>
 
             <!-- Sheet Selection -->
             <div id="sheetSelection" class="hidden mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100 text-center">
-                <label class="block text-sm font-bold text-amber-800 mb-3">Selecciona la hoja con los datos:</label>
+                <label class="block text-sm font-bold text-amber-800 mb-3">Selecciona la hoja (normalmente DATOS):</label>
                 <div class="flex gap-2 justify-center flex-wrap" id="sheetButtons"></div>
             </div>
 
@@ -69,12 +69,19 @@
                 </div>
             </div>
 
-            <!-- Rules Summary -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-8 text-center uppercase tracking-tighter">
-                <div class="p-2 bg-orange-100 text-orange-700 rounded border border-orange-200 text-[10px] font-bold">Split 8.5% / 91.5%</div>
-                <div class="p-2 bg-blue-100 text-blue-700 rounded border border-blue-200 text-[10px] font-bold">Conserva Colores</div>
-                <div class="p-2 bg-red-100 text-red-700 rounded border border-red-200 text-[10px] font-bold">Filtro Cancelados</div>
-                <div class="p-2 bg-green-100 text-green-700 rounded border border-green-200 text-[10px] font-bold">Estilos de Celda</div>
+            <!-- Mapping Rules (VBA Reference) -->
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Mapeo basado en VBA</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-slate-500 font-mono">
+                    <div class="p-2 bg-slate-100 rounded">A -> A (UUID)</div>
+                    <div class="p-2 bg-slate-100 rounded">P -> B (Folio)</div>
+                    <div class="p-2 bg-slate-100 rounded">G -> C (RFC)</div>
+                    <div class="p-2 bg-slate-100 rounded">L -> D (Metodo)</div>
+                    <div class="p-2 bg-slate-100 rounded">O -> E (Moneda)</div>
+                    <div class="p-2 bg-slate-100 rounded">S:T -> G:H (Base)</div>
+                    <div class="p-2 bg-slate-100 rounded">V:AC -> I:P (Totales)</div>
+                    <div class="p-2 bg-slate-100 rounded">AG:AH -> R:S (Cat)</div>
+                </div>
             </div>
         </div>
     </div>
@@ -88,7 +95,7 @@
         const sheetButtons = document.getElementById('sheetButtons');
 
         let currentWorkbook = null;
-        const NARANJA_TARGET = "FFC000";
+        const NARANJA_TARGET = "FFC000"; // RGB(255, 192, 0) de tu VBA
 
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragging'); });
@@ -107,17 +114,17 @@
 
         async function loadWorkbook(file) {
             statusSection.classList.remove('hidden');
-            statusMessage.textContent = "Leyendo estilos de archivo...";
+            statusMessage.textContent = "Leyendo libro y estilos...";
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const data = new Uint8Array(e.target.result);
-                // IMPORTANTE: cellStyles: true para leer los colores
+                // IMPORTANTE: cellStyles: true para detectar el naranja del interior de la celda
                 currentWorkbook = XLSX.read(data, { type: 'array', cellStyles: true });
                 const sheetNames = currentWorkbook.SheetNames;
                 
                 if (sheetNames.length === 1) processSheet(sheetNames[0]);
                 else {
-                    statusMessage.textContent = "Seleccione hoja de origen";
+                    statusMessage.textContent = "Seleccione la hoja de origen";
                     sheetSelection.classList.remove('hidden');
                     sheetButtons.innerHTML = '';
                     sheetNames.forEach(name => {
@@ -132,18 +139,25 @@
             reader.readAsArrayBuffer(file);
         }
 
+        // Función de redondeo espejo de VBA (Application.WorksheetFunction.Round(val, 2))
+        function vbaRound(val) {
+            if (!val || isNaN(val)) return 0;
+            return Math.round((val + Number.EPSILON) * 100) / 100;
+        }
+
         function cleanNum(val) {
             if (val === undefined || val === null || val === "") return 0;
+            // Quitamos comas y caracteres no numéricos pero mantenemos el signo (aunque luego aplicamos ABS)
             const n = parseFloat(String(val).replace(/[^0-9.-]+/g,""));
-            return isNaN(n) ? 0 : n;
+            return isNaN(n) ? 0 : Math.abs(n); // El VBA aplica Abs() al final
         }
 
         function processSheet(name) {
             sheetSelection.classList.add('hidden');
-            statusMessage.textContent = "Conservando estilos y calculando...";
+            statusMessage.textContent = "Procesando filas (Espejo VBA)...";
             
             const ws = currentWorkbook.Sheets[name];
-            // Obtenemos los datos con raw: true para acceder a los objetos de celda completos después
+            // header: 1 devuelve un array de arrays para facilitar el mapeo de columnas del VBA
             const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
             
             const headerStyle = {
@@ -152,90 +166,104 @@
                 alignment: { horizontal: "center" }
             };
 
-            const deducibleStyle = { fill: { fgColor: { rgb: "ECFDF5" } } }; 
-            const noDeducibleStyle = { fill: { fgColor: { rgb: "FEF2F2" } } };
-
-            // Filtrar cancelados
+            // Filtrado de cancelados (VBA: Columna B / Índice 1)
             let filteredIndices = [];
-            for (let i = 2; i < rows.length; i++) {
+            for (let i = 2; i < rows.length; i++) { // Empieza en fila 3 (índice 2)
                 const row = rows[i];
+                if (!row || !row[0]) continue; // Salta vacíos en A
+                
                 const status = String(row[1] || "").toUpperCase();
-                if (!status.includes("CANCELADO") && row[0]) {
+                if (!status.includes("CANCELADO")) {
                     filteredIndices.push(i);
                 }
             }
 
-            // Ordenar por categoría (AG - Índice 32)
+            // Ordenamiento por Categoría (VBA: AG / Índice 32)
             filteredIndices.sort((a, b) => String(rows[a][32] || "").localeCompare(String(rows[b][32] || "")));
 
             const newRows = [];
-            const headers = ["UUID", "FOLIO_INT", "TIPO", "RFC_REC", "METODO", "SUB_8.5%", "IVA_8.5%", "TOTAL_8.5%", "SUB_91.5%", "TOTAL_91.5%", "CATEGORIA", "CONCEPTO"];
+            const headers = ["UUID", "FOLIO_INT", "RFC_REC", "METODO", "MONEDA", "DIA_P", "MONTO_G", "MONTO_H", "MONTO_I", "MONTO_J", "MONTO_K", "MONTO_L", "MONTO_M", "MONTO_N", "MONTO_O", "TOTAL_P", "DIA_Q", "CATEGORIA", "NOTAS", "CONCEPTO"];
             newRows.push(headers.map(h => ({ v: h, t: 's', s: headerStyle })));
 
-            filteredIndices.forEach((originalIdx) => {
-                const row = rows[originalIdx];
-                const catValue = String(row[32] || "");
-                const subtotal = Math.abs(cleanNum(row[18]));
-                const iva = Math.abs(cleanNum(row[21]));
-                const total = Math.abs(cleanNum(row[23]));
-
-                // Obtener el estilo original de la celda de Categoría (columna AG)
-                const cellRef = XLSX.utils.encode_cell({r: originalIdx, c: 32});
-                const cellObj = ws[cellRef];
+            filteredIndices.forEach((idx) => {
+                const row = rows[idx];
                 
-                // Extraer el color de fondo original si existe
-                let originalFill = cellObj?.s?.fill || null;
-                let hasColorNaranja = cellObj?.s?.fill?.fgColor?.rgb?.includes(NARANJA_TARGET);
+                // Columnas de interés según VBA
+                const uuid = row[0];             // A
+                const folio = row[15];           // P
+                const rfc = row[6];              // G
+                const metodo = row[11];          // L
+                const moneda = row[14];          // O
+                const catValue = String(row[32] || ""); // AG
+                const notas = row[33];           // AH
+                
+                // Cantidades base (S:T -> 18, 19) e Totales (V:AC -> 21 a 28)
+                const s = cleanNum(row[18]);
+                const t = cleanNum(row[19]);
+                const v = cleanNum(row[21]);
+                const w = cleanNum(row[22]);
+                const x = cleanNum(row[23]);
+                const y = cleanNum(row[24]);
+                const z = cleanNum(row[25]);
+                const aa = cleanNum(row[26]);
+                const ab = cleanNum(row[27]);
+                const ac = cleanNum(row[28]);
 
-                // Crear un estilo base que herede el color original si no es split
+                // Estilo original de la celda de categoría (AG)
+                const cellRef = XLSX.utils.encode_cell({r: idx, c: 32});
+                const cellObj = ws[cellRef];
+                let originalFill = cellObj?.s?.fill || null;
+                let rgbFound = cellObj?.s?.fill?.fgColor?.rgb || "";
+                let isNaranja = rgbFound.includes(NARANJA_TARGET);
+
                 const baseStyle = originalFill ? { fill: originalFill } : {};
 
-                if (catValue.toUpperCase().includes("RESTAURANTES") && hasColorNaranja) {
-                    // Split mantiene sus colores de ayuda para auditoría
+                // Lógica de ProcesarConsumoRestaurantes (VBA)
+                if (catValue.toUpperCase().includes("RESTAURANTES") && isNaranja) {
+                    
+                    // Fila i+1 (8.5% - Deducible)
                     newRows.push([
-                        { v: row[0], t: 's', s: deducibleStyle },
-                        { v: row[15] || "", t: 's', s: deducibleStyle },
-                        { v: row[6] || "", t: 's', s: deducibleStyle },
-                        { v: row[11] || "", t: 's', s: deducibleStyle },
-                        { v: row[14] || "", t: 's', s: deducibleStyle },
-                        { v: subtotal * 0.085, t: 'n', s: deducibleStyle },
-                        { v: iva * 0.085, t: 'n', s: deducibleStyle },
-                        { v: total * 0.085, t: 'n', s: deducibleStyle },
-                        { v: 0, t: 'n', s: deducibleStyle },
-                        { v: 0, t: 'n', s: deducibleStyle },
-                        { v: "DEDUCIBLE 8.5%", t: 's', s: deducibleStyle },
-                        { v: "CONSUMO RESTAURANTE DEDUCIBLE", t: 's', s: deducibleStyle }
+                        { v: uuid, t: 's', s: baseStyle }, { v: folio, t: 's', s: baseStyle },
+                        { v: rfc, t: 's', s: baseStyle }, { v: metodo, t: 's', s: baseStyle },
+                        { v: moneda, t: 's', s: baseStyle }, { v: "", t: 's', s: baseStyle }, // F
+                        { v: vbaRound(s * 0.085), t: 'n', s: baseStyle }, { v: vbaRound(t * 0.085), t: 'n', s: baseStyle }, // G, H
+                        { v: vbaRound(v * 0.085), t: 'n', s: baseStyle }, { v: vbaRound(w * 0.085), t: 'n', s: baseStyle }, // I, J
+                        { v: vbaRound(x * 0.085), t: 'n', s: baseStyle }, { v: vbaRound(y * 0.085), t: 'n', s: baseStyle }, // K, L
+                        { v: vbaRound(z * 0.085), t: 'n', s: baseStyle }, { v: vbaRound(aa * 0.085), t: 'n', s: baseStyle }, // M, N
+                        { v: vbaRound(ab * 0.085), t: 'n', s: baseStyle }, { v: vbaRound(ac * 0.085), t: 'n', s: baseStyle }, // O, P
+                        { v: "", t: 's', s: baseStyle }, { v: catValue, t: 's', s: baseStyle },
+                        { v: notas, t: 's', s: baseStyle }, { v: folio + " FACTURA " + uuid, t: 's', s: baseStyle }
                     ]);
 
+                    // Fila i+2 (91.5% - NO DEDUCIBLE)
+                    // VBA: Columna R: "NO DEDUCIBLES". Col P -> Col I. G a O (excepto I) en 0.
+                    const total915 = vbaRound(ac * 0.915);
                     newRows.push([
-                        { v: row[0], t: 's', s: noDeducibleStyle },
-                        { v: row[15] || "", t: 's', s: noDeducibleStyle },
-                        { v: row[6] || "", t: 's', s: noDeducibleStyle },
-                        { v: row[11] || "", t: 's', s: noDeducibleStyle },
-                        { v: row[14] || "", t: 's', s: noDeducibleStyle },
-                        { v: 0, t: 'n', s: noDeducibleStyle },
-                        { v: 0, t: 'n', s: noDeducibleStyle },
-                        { v: 0, t: 'n', s: noDeducibleStyle },
-                        { v: subtotal * 0.915, t: 'n', s: noDeducibleStyle },
-                        { v: total * 0.915, t: 'n', s: noDeducibleStyle },
-                        { v: "NO DEDUCIBLE 91.5%", t: 's', s: noDeducibleStyle },
-                        { v: "CONSUMO RESTAURANTE NO DEDUCIBLE", t: 's', s: noDeducibleStyle }
+                        { v: uuid, t: 's', s: baseStyle }, { v: folio, t: 's', s: baseStyle },
+                        { v: rfc, t: 's', s: baseStyle }, { v: metodo, t: 's', s: baseStyle },
+                        { v: moneda, t: 's', s: baseStyle }, { v: "", t: 's', s: baseStyle },
+                        { v: 0, t: 'n', s: baseStyle }, { v: 0, t: 'n', s: baseStyle }, // G, H en 0
+                        { v: total915, t: 'n', s: baseStyle }, // I recibe el valor de P (Total)
+                        { v: 0, t: 'n', s: baseStyle }, { v: 0, t: 'n', s: baseStyle }, { v: 0, t: 'n', s: baseStyle },
+                        { v: 0, t: 'n', s: baseStyle }, { v: 0, t: 'n', s: baseStyle }, { v: 0, t: 'n', s: baseStyle },
+                        { v: total915, t: 'n', s: baseStyle }, // P (Total 91.5%)
+                        { v: "", t: 's', s: baseStyle }, { v: "NO DEDUCIBLES", t: 's', s: baseStyle },
+                        { v: notas, t: 's', s: baseStyle }, { v: folio + " FACTURA " + uuid, t: 's', s: baseStyle }
                     ]);
+
                 } else {
-                    // FILA NORMAL: Copiamos los valores y aplicamos el estilo original
+                    // Fila Normal
                     newRows.push([
-                        { v: row[0], t: 's', s: baseStyle },
-                        { v: row[15] || "", t: 's', s: baseStyle },
-                        { v: row[6] || "", t: 's', s: baseStyle },
-                        { v: row[11] || "", t: 's', s: baseStyle },
-                        { v: row[14] || "", t: 's', s: baseStyle },
-                        { v: subtotal, t: 'n', s: baseStyle },
-                        { v: iva, t: 'n', s: baseStyle },
-                        { v: total, t: 'n', s: baseStyle },
-                        { v: 0, t: 'n', s: baseStyle },
-                        { v: 0, t: 'n', s: baseStyle },
-                        { v: catValue, t: 's', s: baseStyle },
-                        { v: "GASTO GENERAL", t: 's', s: baseStyle }
+                        { v: uuid, t: 's', s: baseStyle }, { v: folio, t: 's', s: baseStyle },
+                        { v: rfc, t: 's', s: baseStyle }, { v: metodo, t: 's', s: baseStyle },
+                        { v: moneda, t: 's', s: baseStyle }, { v: "", t: 's', s: baseStyle },
+                        { v: vbaRound(s), t: 'n', s: baseStyle }, { v: vbaRound(t), t: 'n', s: baseStyle },
+                        { v: vbaRound(v), t: 'n', s: baseStyle }, { v: vbaRound(w), t: 'n', s: baseStyle },
+                        { v: vbaRound(x), t: 'n', s: baseStyle }, { v: vbaRound(y), t: 'n', s: baseStyle },
+                        { v: vbaRound(z), t: 'n', s: baseStyle }, { v: vbaRound(aa), t: 'n', s: baseStyle },
+                        { v: vbaRound(ab), t: 'n', s: baseStyle }, { v: vbaRound(ac), t: 'n', s: baseStyle },
+                        { v: "", t: 's', s: baseStyle }, { v: catValue, t: 's', s: baseStyle },
+                        { v: notas, t: 's', s: baseStyle }, { v: folio + " FACTURA " + uuid, t: 's', s: baseStyle }
                     ]);
                 }
             });
@@ -244,8 +272,8 @@
             const wsNew = XLSX.utils.aoa_to_sheet(newRows);
             wsNew['!cols'] = headers.map(() => ({ wch: 18 }));
 
-            XLSX.utils.book_append_sheet(wbNew, wsNew, "Gastos_Procesados");
-            XLSX.writeFile(wbNew, "Gastos_Final_Colores.xlsx");
+            XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout");
+            XLSX.writeFile(wbNew, "Gastos_Procesados_VBA.xlsx");
             
             statusSection.classList.add('hidden');
         }
