@@ -254,7 +254,7 @@
                 // --- GENERACIÓN DE ARCHIVO ---
                 const wbNew = XLSX.utils.book_new();
                 const wsNew = XLSX.utils.aoa_to_sheet(layoutData);
-                XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout_Facturacion" + name);
+                XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout_Facturacion");
                 
                 showStatus("¡Proceso completado!", false);
                 XLSX.writeFile(wbNew, `Layout_Procesado_${name}.xlsx`);
