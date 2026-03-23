@@ -266,7 +266,7 @@
 
                 XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout_Cobranza");
                 showStatus("¡Proceso completado!", false);
-                XLSX.writeFile(wbNew, `Layout_Cobranza_${name}.xlsx`);
+                XLSX.writeFile(wbNew, `Layout_Cobranza.xlsx`);
 
             } catch (err) {
                 showError(err.message);
