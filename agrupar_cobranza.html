@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrupar Cobranza</title>
+<!-- Cambio del "mundito" (Favicon) usando un Emoji -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💵</text></svg>">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed #10b981;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragging {
+            background-color: #ecfdf5;
+            border-color: #059669;
+            transform: scale(1.02);
+        }
+        .loader {
+            border-top-color: #10b981;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Agrupar Cobranza</h1>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            
+            <!-- Drop Zone -->
+            <div id="dropZone" class="drop-zone rounded-lg p-10 text-center cursor-pointer mb-6">
+                <div class="flex flex-col items-center">
+                    <svg class="w-16 h-16 text-emerald-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-700 font-semibold">Arrastra tu Base de Datos aquí</p>
+                    <p class="text-sm text-gray-500 mt-1">Soporta .xlsx, .xls, .xlsm</p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .xlsm">
+            </div>
+
+            <!-- Sheet Selection -->
+            <div id="sheetSelection" class="hidden mb-6 p-4 bg-emerald-50 rounded-lg border border-emerald-100 text-center">
+                <label class="block text-sm font-bold text-emerald-800 mb-3 text-center">Selecciona la hoja del mes a procesar:</label>
+                <div class="flex gap-2 justify-center flex-wrap" id="sheetButtons"></div>
+            </div>
+
+            <!-- Status Section -->
+            <div id="statusSection" class="hidden">
+                <div class="flex items-center justify-center p-4 bg-emerald-50 text-emerald-700 rounded-lg mb-4">
+                    <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-3"></div>
+                    <span id="statusMessage">Esperando archivo...</span>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden">
+                <div class="p-4 bg-red-50 text-red-700 rounded-lg mb-4 flex items-start">
+                    <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span id="errorMessage"></span>
+                </div>
+            </div>
+
+            <!-- Rules Summary -->
+            <div class="border-t border-gray-100 pt-6 mt-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">NOTAS IMPORTANTES</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600">
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>1:</strong> Dar formato de número a los valores del Layout </li>
+                        <li><strong>2:</strong> Revisar que la información esté completa</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const statusSection = document.getElementById('statusSection');
+        const errorSection = document.getElementById('errorSection');
+        const statusMessage = document.getElementById('statusMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const spinner = document.getElementById('spinner');
+        const sheetSelection = document.getElementById('sheetSelection');
+        const sheetButtons = document.getElementById('sheetButtons');
+
+        let currentWorkbook = null;
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragging'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorSection.classList.remove('hidden');
+            statusSection.classList.add('hidden');
+            sheetSelection.classList.add('hidden');
+        }
+
+        function showStatus(msg, loading = true) {
+            statusMessage.textContent = msg;
+            statusSection.classList.remove('hidden');
+            errorSection.classList.add('hidden');
+            if (loading) spinner.classList.remove('hidden');
+            else spinner.classList.add('hidden');
+        }
+
+        function cleanNum(val) {
+            if (val === undefined || val === null || val === "") return 0;
+            const n = parseFloat(String(val).replace(/[^0-9.-]+/g,""));
+            return isNaN(n) ? 0 : n;
+        }
+
+        function getDayFromExcel(val) {
+            if (!val) return "";
+            if (typeof val === 'number') {
+                const date = XLSX.SSF.parse_date_code(val);
+                return String(date.d).padStart(2, '0');
+            }
+            const strVal = String(val).trim();
+            if (strVal.length >= 2) {
+                const dayPart = strVal.substring(0, 2);
+                if (!isNaN(dayPart)) return dayPart;
+            }
+            return "";
+        }
+
+        async function loadWorkbook(file) {
+            showStatus("Leyendo Excel...");
+            sheetSelection.classList.add('hidden');
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    currentWorkbook = XLSX.read(data, { type: 'array', cellDates: false });
+                    const sheetNames = currentWorkbook.SheetNames;
+                    if (sheetNames.length === 1) processSheet(sheetNames[0]);
+                    else {
+                        showStatus("Hojas detectadas", false);
+                        sheetSelection.classList.remove('hidden');
+                        sheetButtons.innerHTML = '';
+                        sheetNames.forEach(name => {
+                            const btn = document.createElement('button');
+                            btn.className = "px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 transition shadow-sm";
+                            btn.textContent = name;
+                            btn.onclick = () => processSheet(name);
+                            sheetButtons.appendChild(btn);
+                        });
+                    }
+                } catch (err) { showError("Error: " + err.message); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function processSheet(name) {
+            showStatus(`Procesando registros en: ${name}...`);
+            sheetSelection.classList.add('hidden');
+
+            try {
+                const ws = currentWorkbook.Sheets[name];
+                let allRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
+
+                let dataStartIndex = -1;
+                for(let i = 0; i < allRows.length; i++) {
+                    const valA = String(allRows[i][0] || "").trim();
+                    if (uuidRegex.test(valA)) {
+                        dataStartIndex = i;
+                        break;
+                    }
+                }
+
+                if (dataStartIndex === -1) dataStartIndex = 10; 
+                let dataRows = allRows.slice(dataStartIndex);
+
+                const layoutData = dataRows.map(row => {
+                    const colA = String(row[0] || "").trim(); // UUID
+                    const colI = String(row[8] || ""); // Socio P1
+                    const colJ = String(row[9] || ""); // Socio P2
+                    const colM = String(row[12] || ""); // Folio Interno
+                    const colP = cleanNum(row[15]);
+                    const colQ = cleanNum(row[16]);
+                    const colS = cleanNum(row[18]);
+                    const colT = cleanNum(row[19]);
+                    const colU = cleanNum(row[20]);
+                    const colV = cleanNum(row[21]);
+                    const colW = cleanNum(row[22]);
+                    const colX = cleanNum(row[23]); // Total
+                    const colY = row[24]; // Fecha
+                    const colAA = String(row[26] || ""); // Referencia AA
+
+                    const socioNegocio = (colI + " " + colJ).trim();
+                    const diaPago = getDayFromExcel(colY);
+                    
+                    // Concatenación según solicitud: C2, " F INT ", B2, " F FISCAL ", A2
+                    // En el Layout final: Col C (Ref AA), Col B (Socio), Col A (UUID)
+                    const conceptoFinal = `${colAA} F INT ${socioNegocio} F FISCAL ${colA}`;
+
+                    return {
+                        uuid: colA,
+                        montoX: colX,
+                        fechaVal: colY,
+                        data: [
+                            colA,           // Col A Layout (UUID)
+                            socioNegocio,   // Col B Layout (Socio)
+                            colAA,          // Col C Layout (Ref AA)
+                            colM,           // Col D Layout (Folio Int)
+                            colP, colQ, colS, colT, colU, colV, colW, colX, // E a L
+                            diaPago,        // Col M Layout (Día)
+                            "", "",         // N y O
+                            conceptoFinal   // Col P Layout (Concepto)
+                        ]
+                    };
+                }).filter(item => {
+                    const tieneIdentificador = uuidRegex.test(item.uuid) || item.montoX !== 0;
+                    const tieneFecha = item.fechaVal !== undefined && item.fechaVal !== null && item.fechaVal !== ""; 
+                    return tieneIdentificador && tieneFecha;
+                }).map(item => item.data);
+
+                if (layoutData.length === 0) {
+                    throw new Error("No se encontraron registros válidos.");
+                }
+
+                const headers = [
+                    "UUID", "FOLIO INTERNO", "RFC DEL RECEPTOR", "METODO DE PAGO", 
+                    "BASE IVA EXENTO", "BASE IVA TASA CERO", "BASE TASA I.V.A.", "DESCUENTO", 
+                    "I.V.A.", "I.S.R. RETENIDO", "I.V.A. RETENIDO", "TOTAL", 
+                    "FECHA DE PAGO", "BANCO", "OBS", "CONCEPTO"
+                ];
+                
+                layoutData.unshift(headers);
+
+                const wbNew = XLSX.utils.book_new();
+                const wsNew = XLSX.utils.aoa_to_sheet(layoutData);
+
+                // Nota estética: Aplicar estilos directos al archivo descargado requiere 
+                // una librería diferente (xlsx-js-style) o post-procesamiento en Excel.
+                // Aquí generamos el archivo limpio listo para aplicar Formato Condicional.
+
+                XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout_Cobranza");
+                showStatus("¡Proceso completado!", false);
+                XLSX.writeFile(wbNew, `Layout_Cobranza_${name}.xlsx`);
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrupar Facturación</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed #3b82f6;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragging {
+            background-color: #eff6ff;
+            border-color: #1d4ed8;
+            transform: scale(1.02);
+        }
+        .loader {
+            border-top-color: #3498db;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Agrupar Facturación</h1>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            
+            <!-- Drop Zone -->
+            <div id="dropZone" class="drop-zone rounded-lg p-10 text-center cursor-pointer mb-6">
+                <div class="flex flex-col items-center">
+                    <svg class="w-16 h-16 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-700 font-semibold">Arrastra tu Base de Datos aquí</p>
+                    <p class="text-sm text-gray-500 mt-1">Soporta .xlsx, .xls, .xlsm</p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .xlsm">
+            </div>
+
+            <!-- Sheet Selection -->
+            <div id="sheetSelection" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-gray-200">
+                <label class="block text-sm font-bold text-blue-700 mb-2 text-center">Selecciona la hoja del mes a procesar:</label>
+                <div class="flex gap-2 justify-center flex-wrap" id="sheetButtons"></div>
+            </div>
+
+            <!-- Status Section -->
+            <div id="statusSection" class="hidden">
+                <div class="flex items-center justify-center p-4 bg-blue-50 text-blue-700 rounded-lg mb-4">
+                    <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-3"></div>
+                    <span id="statusMessage">Esperando archivo...</span>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="errorSection" class="hidden">
+                <div class="p-4 bg-red-50 text-red-700 rounded-lg mb-4 flex items-start">
+                    <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span id="errorMessage"></span>
+                </div>
+            </div>
+
+            <!-- Process Summary -->
+            <div class="border-t border-gray-100 pt-6 mt-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">NOTAS IMPORTANTES</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600">
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>1:</strong> Dar formato de número a los valores del Layout </li>
+                        <li><strong>2:</strong> Revisar que la información esté completa</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const statusSection = document.getElementById('statusSection');
+        const errorSection = document.getElementById('errorSection');
+        const statusMessage = document.getElementById('statusMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const spinner = document.getElementById('spinner');
+        const sheetSelection = document.getElementById('sheetSelection');
+        const sheetButtons = document.getElementById('sheetButtons');
+
+        let currentWorkbook = null;
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragging');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorSection.classList.remove('hidden');
+            statusSection.classList.add('hidden');
+            sheetSelection.classList.add('hidden');
+        }
+
+        function showStatus(msg, loading = true) {
+            statusMessage.textContent = msg;
+            statusSection.classList.remove('hidden');
+            errorSection.classList.add('hidden');
+            if (loading) spinner.classList.remove('hidden');
+            else spinner.classList.add('hidden');
+        }
+
+        async function loadWorkbook(file) {
+            showStatus("Cargando libro de Excel...");
+            sheetSelection.classList.add('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    currentWorkbook = XLSX.read(data, { type: 'array' });
+                    
+                    const sheetNames = currentWorkbook.SheetNames;
+                    
+                    if (sheetNames.length === 1) {
+                        processSheet(sheetNames[0]);
+                    } else {
+                        showStatus("Hojas detectadas", false);
+                        sheetSelection.classList.remove('hidden');
+                        sheetButtons.innerHTML = '';
+                        sheetNames.forEach(name => {
+                            const btn = document.createElement('button');
+                            btn.className = "px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-800 transition shadow-sm";
+                            btn.textContent = name;
+                            btn.onclick = () => processSheet(name);
+                            sheetButtons.appendChild(btn);
+                        });
+                    }
+                } catch (err) {
+                    showError("Error al leer el archivo: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function processSheet(name) {
+            showStatus(`Procesando hoja: ${name}...`);
+            sheetSelection.classList.add('hidden');
+
+            try {
+                const ws = currentWorkbook.Sheets[name];
+                let rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+                // Los datos empiezan en la fila 3 (índice 2)
+                let dataRows = rows.slice(2); 
+
+                if (dataRows.length === 0) {
+                    throw new Error("No se encontraron datos a partir de la fila 3.");
+                }
+
+                // 1. Filtrar VIGENTE
+                dataRows = dataRows.filter(row => {
+                    const cellB = String(row[1] || "").toUpperCase();
+                    const cellC = String(row[2] || "").toUpperCase();
+                    return cellB.includes("VIGENTE") || cellC.includes("VIGENTE");
+                });
+
+                if (dataRows.length === 0) {
+                    throw new Error("No hay registros 'VIGENTE' en esta hoja.");
+                }
+
+                // 2. Ordenar por Columna M (índice 12) original
+                dataRows.sort((a, b) => String(a[12] || "").localeCompare(String(b[12] || "")));
+
+                // 3. Mapeo al Layout Final
+                const layoutData = dataRows.map(row => {
+                    const getAbs = (val) => {
+                        const n = parseFloat(String(val).replace(/[^0-9.-]+/g,""));
+                        return isNaN(n) ? 0 : Math.abs(n);
+                    };
+
+                    const colA = row[0];
+                    const colG = String(row[6] || "");
+                    const colH = String(row[7] || "");
+                    const colI = String(row[8] || "");
+                    const colJ = String(row[9] || "");
+                    const colK = String(row[10] || "");
+                    const colM = String(row[12] || "");
+                    const colY = row[24];
+
+                    const colBLayout = (colI + " " + colJ).trim();
+                    const colNLayout = colH.length >= 10 ? colH.substring(8, 10) : "";
+                    const colOLayout = colK.substring(0, 2);
+                    const colPLayout = `${colY} F INT ${colBLayout} F FISCAL ${colA}`;
+
+                    return [
+                        colA, colBLayout, colG, colY, colM,
+                        getAbs(row[15]), getAbs(row[16]), getAbs(row[18]),
+                        getAbs(row[19]), getAbs(row[20]), getAbs(row[21]),
+                        getAbs(row[22]), getAbs(row[23]),
+                        colNLayout, colOLayout, colPLayout
+                    ];
+                });
+
+                // --- MODIFICA AQUÍ LOS NOMBRES DE LOS ENCABEZADOS ---
+                const headers = [
+                    "UUID",               // Col A
+                    "FOLIO INTERNO",    // Col B
+                    "TIPO DE COMPROBANTE",       // Col C
+                    "RFC RECEPTOR",           // Col D
+                    "METODO DE PAGO",          // Col E
+                    "BASE IVA EXENTO",          // Col F
+                    "BASE IVA TASA CERO",          // Col G
+                    "BASE IVA 16%",          // Col H
+                    "DESCUENTO",          // Col I
+                    "I.V.A.",          // Col J
+                    "I.S.R. RETENIDO",          // Col K
+                    "I.V.A. RETENIDO",          // Col L
+                    "TOTAL",          // Col M
+                    "FECHA DE EMISION",              // Col N
+                    "RELACION",         // Col O
+                    "CONCEPTO"     // Col P
+                ];
+                
+                layoutData.unshift(headers);
+
+                // --- GENERACIÓN DE ARCHIVO ---
+                const wbNew = XLSX.utils.book_new();
+                const wsNew = XLSX.utils.aoa_to_sheet(layoutData);
+                XLSX.utils.book_append_sheet(wbNew, wsNew, "Layout_Facturacion" + name);
+                
+                showStatus("¡Proceso completado!", false);
+                XLSX.writeFile(wbNew, `Layout_Procesado_${name}.xlsx`);
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+    </script>
+</body>
+</html>

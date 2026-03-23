@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Procesador Contable</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>📊</text></svg>">
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center font-sans">
+
+    <div class="max-w-4xl w-full px-6 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Procesador Contable</h1>
+            <p class="text-slate-600 text-lg">Selecciona la herramienta que deseas utilizar hoy.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Tarjeta Gastos -->
+            <a href="agrupar_gastos.html" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-orange-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors">
+                    <svg class="w-8 h-8 text-orange-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Agrupar Gastos</h2>
+                <p class="text-slate-500 mb-6 text-sm">Procesador de deducibles con split automático del 8.5% para restaurantes y detección de colores.</p>
+                <span class="inline-flex items-center text-orange-600 font-semibold group-hover:translate-x-2 transition-transform">
+                    Abrir Herramienta 
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </span>
+            </a>
+
+            <!-- Tarjeta Cobranza -->
+            <a href="agrupar_cobranza.html" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-emerald-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 transition-colors">
+                    <svg class="w-8 h-8 text-emerald-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Agrupar Cobranza</h2>
+                <p class="text-slate-500 mb-6 text-sm">Layout con detección de montos negativos, limpieza de UUIDs y generación de conceptos pro.</p>
+                <span class="inline-flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
+                    Abrir Herramienta 
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </span>
+            </a>
+        </div>
+
+        <footer class="mt-16 text-center text-slate-400 text-xs">
+            <p>Repositorio de Herramientas Contables Internas &copy; 2024</p>
+        </footer>
+    </div>
+
+</body>
+</html>
