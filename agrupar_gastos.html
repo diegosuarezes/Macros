@@ -37,7 +37,7 @@
         <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Agrupar Gastos</h1>
-            <p class="text-slate-600 font-medium">Split de Restaurantes (8.5% / 91.5%) con detección de color</p>
+            <p class="text-slate-600 font-medium">Split de Restaurantes (8.5% / 91.5%) - Conservando Colores Originales</p>
         </div>
 
         <!-- Main Card -->
@@ -50,7 +50,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
                     </svg>
                     <p class="text-lg font-semibold text-slate-700">Suelte el archivo de Gastos aquí</p>
-                    <p class="text-sm text-slate-500 mt-1 text-center">Detecta automáticamente celdas Naranjas (FFC000) en Consumos</p>
+                    <p class="text-sm text-slate-500 mt-1 text-center">Mantiene los colores de fondo de sus registros originales</p>
                 </div>
                 <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .xlsm">
             </div>
@@ -72,7 +72,7 @@
             <!-- Rules Summary -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-8 text-center uppercase tracking-tighter">
                 <div class="p-2 bg-orange-100 text-orange-700 rounded border border-orange-200 text-[10px] font-bold">Split 8.5% / 91.5%</div>
-                <div class="p-2 bg-blue-100 text-blue-700 rounded border border-blue-200 text-[10px] font-bold">Valores Absolutos</div>
+                <div class="p-2 bg-blue-100 text-blue-700 rounded border border-blue-200 text-[10px] font-bold">Conserva Colores</div>
                 <div class="p-2 bg-red-100 text-red-700 rounded border border-red-200 text-[10px] font-bold">Filtro Cancelados</div>
                 <div class="p-2 bg-green-100 text-green-700 rounded border border-green-200 text-[10px] font-bold">Estilos de Celda</div>
             </div>
@@ -111,6 +111,7 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const data = new Uint8Array(e.target.result);
+                // IMPORTANTE: cellStyles: true para leer los colores
                 currentWorkbook = XLSX.read(data, { type: 'array', cellStyles: true });
                 const sheetNames = currentWorkbook.SheetNames;
                 
@@ -139,50 +140,58 @@
 
         function processSheet(name) {
             sheetSelection.classList.add('hidden');
-            statusMessage.textContent = "Calculando Split y Colores...";
+            statusMessage.textContent = "Conservando estilos y calculando...";
             
             const ws = currentWorkbook.Sheets[name];
+            // Obtenemos los datos con raw: true para acceder a los objetos de celda completos después
             const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
             
-            // Estilos del nuevo Excel
             const headerStyle = {
-                fill: { fgColor: { rgb: "F59E0B" } }, // Naranja Tailwind
+                fill: { fgColor: { rgb: "F59E0B" } },
                 font: { color: { rgb: "FFFFFF" }, bold: true },
                 alignment: { horizontal: "center" }
             };
 
-            const deducibleStyle = { fill: { fgColor: { rgb: "ECFDF5" } } }; // Verde muy tenue
-            const noDeducibleStyle = { fill: { fgColor: { rgb: "FEF2F2" } } }; // Rojo muy tenue
+            const deducibleStyle = { fill: { fgColor: { rgb: "ECFDF5" } } }; 
+            const noDeducibleStyle = { fill: { fgColor: { rgb: "FEF2F2" } } };
 
-            // Filtrar y Ordenar
-            let filtered = rows.slice(2).filter(row => {
+            // Filtrar cancelados
+            let filteredIndices = [];
+            for (let i = 2; i < rows.length; i++) {
+                const row = rows[i];
                 const status = String(row[1] || "").toUpperCase();
-                return !status.includes("CANCELADO") && row[0];
-            });
+                if (!status.includes("CANCELADO") && row[0]) {
+                    filteredIndices.push(i);
+                }
+            }
 
-            // Ordenar por categoría (Col AG - Índice 32)
-            filtered.sort((a, b) => String(a[32] || "").localeCompare(String(b[32] || "")));
+            // Ordenar por categoría (AG - Índice 32)
+            filteredIndices.sort((a, b) => String(rows[a][32] || "").localeCompare(String(rows[b][32] || "")));
 
             const newRows = [];
             const headers = ["UUID", "FOLIO_INT", "TIPO", "RFC_REC", "METODO", "SUB_8.5%", "IVA_8.5%", "TOTAL_8.5%", "SUB_91.5%", "TOTAL_91.5%", "CATEGORIA", "CONCEPTO"];
-            
             newRows.push(headers.map(h => ({ v: h, t: 's', s: headerStyle })));
 
-            filtered.forEach((row, idx) => {
-                const rowIndex = idx + 2;
+            filteredIndices.forEach((originalIdx) => {
+                const row = rows[originalIdx];
                 const catValue = String(row[32] || "");
                 const subtotal = Math.abs(cleanNum(row[18]));
                 const iva = Math.abs(cleanNum(row[21]));
                 const total = Math.abs(cleanNum(row[23]));
 
-                // Detección de color en celda original (AG - Índice 32)
-                const cellRef = XLSX.utils.encode_cell({r: rowIndex, c: 32});
+                // Obtener el estilo original de la celda de Categoría (columna AG)
+                const cellRef = XLSX.utils.encode_cell({r: originalIdx, c: 32});
                 const cellObj = ws[cellRef];
-                let hasColor = false;
-                if (cellObj?.s?.fill?.fgColor?.rgb?.includes(NARANJA_TARGET)) hasColor = true;
+                
+                // Extraer el color de fondo original si existe
+                let originalFill = cellObj?.s?.fill || null;
+                let hasColorNaranja = cellObj?.s?.fill?.fgColor?.rgb?.includes(NARANJA_TARGET);
 
-                if (catValue.toUpperCase().includes("RESTAURANTES") && hasColor) {
-                    // FILA 1: 8.5% DEDUCIBLE
+                // Crear un estilo base que herede el color original si no es split
+                const baseStyle = originalFill ? { fill: originalFill } : {};
+
+                if (catValue.toUpperCase().includes("RESTAURANTES") && hasColorNaranja) {
+                    // Split mantiene sus colores de ayuda para auditoría
                     newRows.push([
                         { v: row[0], t: 's', s: deducibleStyle },
                         { v: row[15] || "", t: 's', s: deducibleStyle },
@@ -198,7 +207,6 @@
                         { v: "CONSUMO RESTAURANTE DEDUCIBLE", t: 's', s: deducibleStyle }
                     ]);
 
-                    // FILA 2: 91.5% NO DEDUCIBLE
                     newRows.push([
                         { v: row[0], t: 's', s: noDeducibleStyle },
                         { v: row[15] || "", t: 's', s: noDeducibleStyle },
@@ -214,10 +222,20 @@
                         { v: "CONSUMO RESTAURANTE NO DEDUCIBLE", t: 's', s: noDeducibleStyle }
                     ]);
                 } else {
-                    // FILA NORMAL
+                    // FILA NORMAL: Copiamos los valores y aplicamos el estilo original
                     newRows.push([
-                        row[0], row[15] || "", row[6] || "", row[11] || "", row[14] || "",
-                        subtotal, iva, total, 0, 0, catValue, "GASTO GENERAL"
+                        { v: row[0], t: 's', s: baseStyle },
+                        { v: row[15] || "", t: 's', s: baseStyle },
+                        { v: row[6] || "", t: 's', s: baseStyle },
+                        { v: row[11] || "", t: 's', s: baseStyle },
+                        { v: row[14] || "", t: 's', s: baseStyle },
+                        { v: subtotal, t: 'n', s: baseStyle },
+                        { v: iva, t: 'n', s: baseStyle },
+                        { v: total, t: 'n', s: baseStyle },
+                        { v: 0, t: 'n', s: baseStyle },
+                        { v: 0, t: 'n', s: baseStyle },
+                        { v: catValue, t: 's', s: baseStyle },
+                        { v: "GASTO GENERAL", t: 's', s: baseStyle }
                     ]);
                 }
             });
