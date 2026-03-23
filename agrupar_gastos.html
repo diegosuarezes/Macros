@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrupar Gastos - Procesador de Deducibles</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🔍🧾</text></svg>">
+    
+    <!-- Librería con soporte para ESTILOS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        .drop-zone {
+            border: 2px dashed #f59e0b;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragging {
+            background-color: #fffbeb;
+            border-color: #d97706;
+            transform: scale(1.02);
+        }
+        .loader {
+            border-top-color: #f59e0b;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Agrupar Gastos</h1>
+            <p class="text-slate-600 font-medium">Split de Restaurantes (8.5% / 91.5%) con detección de color</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-slate-200">
+            
+            <!-- Drop Zone -->
+            <div id="dropZone" class="drop-zone rounded-lg p-10 text-center cursor-pointer mb-6 bg-slate-50">
+                <div class="flex flex-col items-center">
+                    <svg class="w-16 h-16 text-amber-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+                    </svg>
+                    <p class="text-lg font-semibold text-slate-700">Suelte el archivo de Gastos aquí</p>
+                    <p class="text-sm text-slate-500 mt-1 text-center">Detecta automáticamente celdas Naranjas (FFC000) en Consumos</p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .xlsm">
+            </div>
+
+            <!-- Sheet Selection -->
+            <div id="sheetSelection" class="hidden mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100 text-center">
+                <label class="block text-sm font-bold text-amber-800 mb-3">Selecciona la hoja con los datos:</label>
+                <div class="flex gap-2 justify-center flex-wrap" id="sheetButtons"></div>
+            </div>
+
+            <!-- Status -->
+            <div id="statusSection" class="hidden">
+                <div class="flex items-center justify-center p-4 bg-amber-50 text-amber-700 rounded-lg mb-4">
+                    <div id="spinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-3"></div>
+                    <span id="statusMessage">Procesando...</span>
+                </div>
+            </div>
+
+            <!-- Rules Summary -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-8 text-center uppercase tracking-tighter">
+                <div class="p-2 bg-orange-100 text-orange-700 rounded border border-orange-200 text-[10px] font-bold">Split 8.5% / 91.5%</div>
+                <div class="p-2 bg-blue-100 text-blue-700 rounded border border-blue-200 text-[10px] font-bold">Valores Absolutos</div>
+                <div class="p-2 bg-red-100 text-red-700 rounded border border-red-200 text-[10px] font-bold">Filtro Cancelados</div>
+                <div class="p-2 bg-green-100 text-green-700 rounded border border-green-200 text-[10px] font-bold">Estilos de Celda</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const statusSection = document.getElementById('statusSection');
+        const statusMessage = document.getElementById('statusMessage');
+        const sheetSelection = document.getElementById('sheetSelection');
+        const sheetButtons = document.getElementById('sheetButtons');
+
+        let currentWorkbook = null;
+        const NARANJA_TARGET = "FFC000";
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragging'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) loadWorkbook(file);
+        });
+
+        async function loadWorkbook(file) {
+            statusSection.classList.remove('hidden');
+            statusMessage.textContent = "Leyendo estilos de archivo...";
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = new Uint8Array(e.target.result);
+                currentWorkbook = XLSX.read(data, { type: 'array', cellStyles: true });
+                const sheetNames = currentWorkbook.SheetNames;
+                
+                if (sheetNames.length === 1) processSheet(sheetNames[0]);
+                else {
+                    statusMessage.textContent = "Seleccione hoja de origen";
+                    sheetSelection.classList.remove('hidden');
+                    sheetButtons.innerHTML = '';
+                    sheetNames.forEach(name => {
+                        const btn = document.createElement('button');
+                        btn.className = "px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 transition";
+                        btn.textContent = name;
+                        btn.onclick = () => processSheet(name);
+                        sheetButtons.appendChild(btn);
+                    });
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function cleanNum(val) {
+            if (val === undefined || val === null || val === "") return 0;
+            const n = parseFloat(String(val).replace(/[^0-9.-]+/g,""));
+            return isNaN(n) ? 0 : n;
+        }
+
+        function processSheet(name) {
+            sheetSelection.classList.add('hidden');
+            statusMessage.textContent = "Calculando Split y Colores...";
+            
+            const ws = currentWorkbook.Sheets[name];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
+            
+            // Estilos del nuevo Excel
+            const headerStyle = {
+                fill: { fgColor: { rgb: "F59E0B" } }, // Naranja Tailwind
+                font: { color: { rgb: "FFFFFF" }, bold: true },
+                alignment: { horizontal: "center" }
+            };
+
+            const deducibleStyle = { fill: { fgColor: { rgb: "ECFDF5" } } }; // Verde muy tenue
+            const noDeducibleStyle = { fill: { fgColor: { rgb: "FEF2F2" } } }; // Rojo muy tenue
+
+            // Filtrar y Ordenar
+            let filtered = rows.slice(2).filter(row => {
+                const status = String(row[1] || "").toUpperCase();
+                return !status.includes("CANCELADO") && row[0];
+            });
+
+            // Ordenar por categoría (Col AG - Índice 32)
+            filtered.sort((a, b) => String(a[32] || "").localeCompare(String(b[32] || "")));
+
+            const newRows = [];
+            const headers = ["UUID", "FOLIO_INT", "TIPO", "RFC_REC", "METODO", "SUB_8.5%", "IVA_8.5%", "TOTAL_8.5%", "SUB_91.5%", "TOTAL_91.5%", "CATEGORIA", "CONCEPTO"];
+            
+            newRows.push(headers.map(h => ({ v: h, t: 's', s: headerStyle })));
+
+            filtered.forEach((row, idx) => {
+                const rowIndex = idx + 2;
+                const catValue = String(row[32] || "");
+                const subtotal = Math.abs(cleanNum(row[18]));
+                const iva = Math.abs(cleanNum(row[21]));
+                const total = Math.abs(cleanNum(row[23]));
+
+                // Detección de color en celda original (AG - Índice 32)
+                const cellRef = XLSX.utils.encode_cell({r: rowIndex, c: 32});
+                const cellObj = ws[cellRef];
+                let hasColor = false;
+                if (cellObj?.s?.fill?.fgColor?.rgb?.includes(NARANJA_TARGET)) hasColor = true;
+
+                if (catValue.toUpperCase().includes("RESTAURANTES") && hasColor) {
+                    // FILA 1: 8.5% DEDUCIBLE
+                    newRows.push([
+                        { v: row[0], t: 's', s: deducibleStyle },
+                        { v: row[15] || "", t: 's', s: deducibleStyle },
+                        { v: row[6] || "", t: 's', s: deducibleStyle },
+                        { v: row[11] || "", t: 's', s: deducibleStyle },
+                        { v: row[14] || "", t: 's', s: deducibleStyle },
+                        { v: subtotal * 0.085, t: 'n', s: deducibleStyle },
+                        { v: iva * 0.085, t: 'n', s: deducibleStyle },
+                        { v: total * 0.085, t: 'n', s: deducibleStyle },
+                        { v: 0, t: 'n', s: deducibleStyle },
+                        { v: 0, t: 'n', s: deducibleStyle },
+                        { v: "DEDUCIBLE 8.5%", t: 's', s: deducibleStyle },
+                        { v: "CONSUMO RESTAURANTE DEDUCIBLE", t: 's', s: deducibleStyle }
+                    ]);
+
+                    // FILA 2: 91.5% NO DEDUCIBLE
+                    newRows.push([
+                        { v: row[0], t: 's', s: noDeducibleStyle },
+                        { v: row[15] || "", t: 's', s: noDeducibleStyle },
+                        { v: row[6] || "", t: 's', s: noDeducibleStyle },
+                        { v: row[11] || "", t: 's', s: noDeducibleStyle },
+                        { v: row[14] || "", t: 's', s: noDeducibleStyle },
+                        { v: 0, t: 'n', s: noDeducibleStyle },
+                        { v: 0, t: 'n', s: noDeducibleStyle },
+                        { v: 0, t: 'n', s: noDeducibleStyle },
+                        { v: subtotal * 0.915, t: 'n', s: noDeducibleStyle },
+                        { v: total * 0.915, t: 'n', s: noDeducibleStyle },
+                        { v: "NO DEDUCIBLE 91.5%", t: 's', s: noDeducibleStyle },
+                        { v: "CONSUMO RESTAURANTE NO DEDUCIBLE", t: 's', s: noDeducibleStyle }
+                    ]);
+                } else {
+                    // FILA NORMAL
+                    newRows.push([
+                        row[0], row[15] || "", row[6] || "", row[11] || "", row[14] || "",
+                        subtotal, iva, total, 0, 0, catValue, "GASTO GENERAL"
+                    ]);
+                }
+            });
+
+            const wbNew = XLSX.utils.book_new();
+            const wsNew = XLSX.utils.aoa_to_sheet(newRows);
+            wsNew['!cols'] = headers.map(() => ({ wch: 18 }));
+
+            XLSX.utils.book_append_sheet(wbNew, wsNew, "Gastos_Procesados");
+            XLSX.writeFile(wbNew, "Gastos_Final_Colores.xlsx");
+            
+            statusSection.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
