@@ -9,42 +9,74 @@
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center font-sans">
 
-    <div class="max-w-4xl w-full px-6 py-12">
+    <div class="max-w-6xl w-full px-6 py-12">
         <div class="text-center mb-12">
             <h1 class="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Procesador Contable</h1>
             <p class="text-slate-600 text-lg">Selecciona la herramienta que deseas utilizar hoy.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Tarjeta Gastos -->
-            <a href="agrupar_gastos.html" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-orange-300 transition-all duration-300 transform hover:-translate-y-2">
-                <div class="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors">
-                    <svg class="w-8 h-8 text-orange-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Tarjeta Facturación -->
+            <a href="agrupar_facturacion.html" class="group bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-500 transition-colors">
+                    <svg class="w-7 h-7 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Agrupar Gastos</h2>
-                <p class="text-slate-500 mb-6 text-sm">Procesador de deducibles con split automático del 8.5% para restaurantes y detección de colores.</p>
-                <span class="inline-flex items-center text-orange-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    Abrir Herramienta 
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Facturación</h2>
+                <p class="text-slate-500 mb-6 text-xs leading-relaxed">Procesamiento y agrupación de facturas emitidas para control de ingresos.</p>
+                <span class="inline-flex items-center text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                    Abrir 
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </span>
             </a>
 
             <!-- Tarjeta Cobranza -->
-            <a href="agrupar_cobranza.html" class="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-emerald-300 transition-all duration-300 transform hover:-translate-y-2">
-                <div class="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 transition-colors">
-                    <svg class="w-8 h-8 text-emerald-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="agrupar_cobranza.html" class="group bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-emerald-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 transition-colors">
+                    <svg class="w-7 h-7 text-emerald-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Agrupar Cobranza</h2>
-                <p class="text-slate-500 mb-6 text-sm">Layout con detección de montos negativos, limpieza de UUIDs y generación de conceptos pro.</p>
-                <span class="inline-flex items-center text-emerald-600 font-semibold group-hover:translate-x-2 transition-transform">
-                    Abrir Herramienta 
-                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Cobranza</h2>
+                <p class="text-slate-500 mb-6 text-xs leading-relaxed">Detección de montos negativos y generación de conceptos pro para layout.</p>
+                <span class="inline-flex items-center text-emerald-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                    Abrir 
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </span>
             </a>
+
+            <!-- Tarjeta Gastos -->
+            <a href="agrupar_gastos.html" class="group bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-orange-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors">
+                    <svg class="w-7 h-7 text-orange-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Gastos</h2>
+                <p class="text-slate-500 mb-6 text-xs leading-relaxed">Split automático del 8.5% en restaurantes y limpieza de cancelados.</p>
+                <span class="inline-flex items-center text-orange-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                    Abrir 
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </span>
+            </a>
+
+            <!-- Tarjeta Integración -->
+            <a href="agrupar_integracion.html" class="group bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-purple-300 transition-all duration-300 transform hover:-translate-y-2">
+                <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500 transition-colors">
+                    <svg class="w-7 h-7 text-purple-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Integración</h2>
+                <p class="text-slate-500 mb-6 text-xs leading-relaxed">Consolidación final de datos para reportes anuales y comparativas.</p>
+                <span class="inline-flex items-center text-purple-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
+                    Abrir 
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </span>
+            </a>
+
         </div>
 
         <footer class="mt-16 text-center text-slate-400 text-xs">
