@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor CFDI Maestro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root { --theme-color: #334155; --theme-bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .font-mono { font-family: 'JetBrains+Mono', monospace; }
+        
+        .theme-I { --theme-color: #2563eb; --theme-bg: #eff6ff; } 
+        .theme-E { --theme-color: #dc2626; --theme-bg: #fef2f2; } 
+        .theme-P { --theme-color: #16a34a; --theme-bg: #f0fdf4; } 
+        .theme-N { --theme-color: #7c3aed; --theme-bg: #f5f3ff; } 
+
+        .invoice-box { max-width: 900px; margin: auto; background: white; transition: all 0.3s ease; }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; }
+        .drop-zone.drag-over { border-color: #2563eb; background-color: #f8fafc; }
+        .dynamic-border { border-left: 8px solid var(--theme-color); }
+
+        @media print {
+            @page { margin: 0.5cm; }
+            body { 
+                background: white !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            .invoice-box { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important;
+                width: 100% !important; 
+                max-width: 100% !important; 
+                margin: 0 !important;
+                padding: 1.5rem !important;
+                border-radius: 0 !important;
+            }
+            .grid { 
+                display: grid !important; 
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+                gap: 1.5rem !important;
+            }
+            #v-detalles-box, .bg-slate-50, .bg-slate-50\/50 {
+                background-color: var(--theme-bg) !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body class="py-8 px-4">
+
+    <div class="max-w-4xl mx-auto no-print mb-8">
+        <div id="dropZone" class="drop-zone bg-white rounded-2xl p-10 text-center cursor-pointer shadow-sm">
+            <div class="flex flex-col items-center">
+                <div class="bg-slate-100 p-4 rounded-full mb-3 text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-700">Cargar CFDI (XML)</h2>
+                <p class="text-sm text-slate-400">Listo para exportar en PDF</p>
+                <input type="file" id="fileInput" class="hidden" accept=".xml">
+            </div>
+        </div>
+    </div>
+
+    <div id="invoicePreview" class="invoice-box hidden p-8 md:p-12 rounded-3xl shadow-xl border border-slate-200 dynamic-border">
+        <div class="flex justify-between items-start mb-10 no-print">
+            <div id="badge-tipo" class="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest text-white shadow-md"></div>
+            <button id="btnPrint" class="flex items-center gap-2 bg-red-800 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition-all hover:scale-105 active:scale-95 duration-200">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>
+  
+  Exportar a PDF
+</button>
+        </div>
+
+        <!-- Cabecera -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-slate-100 pb-10 mb-10">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest mb-2" style="color: var(--theme-color)">Emisor</p>
+                <h1 class="text-2xl font-black text-slate-900 leading-tight mb-1" id="v-emi-nom"></h1>
+                <p class="text-sm font-mono font-bold text-slate-500" id="v-emi-rfc"></p>
+                <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase" id="v-emi-regimen"></p>
+            </div>
+            <div class="md:text-right">
+                <h2 class="text-3xl font-black text-slate-200 italic" id="v-doc-label">CFDI</h2>
+                <p class="text-sm font-black text-slate-700" id="v-folio"></p>
+                <p class="text-xs font-mono text-slate-400" id="v-fecha"></p>
+            </div>
+        </div>
+
+        <!-- Receptor y Bloque de Detalles Dinámicos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="p-6 rounded-2xl border border-slate-100 bg-slate-50">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Receptor</p>
+                <p class="font-black text-slate-800 mb-1" id="v-rec-nom"></p>
+                <p class="text-sm font-mono font-bold text-slate-500" id="v-rec-rfc"></p>
+                <p class="text-[11px] font-bold text-slate-600 uppercase mt-4" id="v-rec-regimen"></p>
+            </div>
+            
+            <div id="v-detalles-box" class="p-6 rounded-2xl border flex flex-col gap-4 overflow-hidden" style="background-color: var(--theme-bg); border-color: var(--theme-color);">
+                <div id="v-metodo-seccion">
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-1 opacity-70" style="color: var(--theme-color)">Método y Forma de Pago</p>
+                    <p class="text-[11px] font-bold text-slate-800" id="v-metodo-forma-display"></p>
+                </div>
+
+                <div id="v-relacionados-seccion" class="hidden border-t border-slate-200/50 pt-3">
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-1 opacity-70" style="color: var(--theme-color)">CFDI Relacionado</p>
+                    <p class="text-[11px] font-black text-slate-900 leading-tight" id="v-rel-tipo"></p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1 break-all" id="v-rel-uuid"></p>
+                </div>
+
+                <div class="border-t border-slate-200/50 pt-3">
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-1 opacity-70" style="color: var(--theme-color)">Uso de CFDI</p>
+                    <p class="text-[11px] font-bold text-slate-800" id="v-uso-detalle"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="mb-10 overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+            <table class="w-full text-left text-sm">
+                <thead id="v-table-head" class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest"></thead>
+                <tbody id="v-table-body" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+
+        <!-- Totales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start pt-10 border-t-2 border-slate-100">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Folio Fiscal (UUID)</p>
+                <p class="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 break-all" id="v-uuid"></p>
+            </div>
+            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-2" id="v-totales-cont"></div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const preview = document.getElementById('invoicePreview');
+
+        const relMap = {
+            "01": "Nota de crédito de los documentos relacionados",
+            "02": "Nota de débito de los documentos relacionados",
+            "03": "Devolución de mercancía sobre facturas o traslados previos",
+            "04": "Sustitución de los CFDI previos",
+            "05": "Traslados de mercancías facturados previamente",
+            "06": "Factura generada por los traslados previos",
+            "07": "CFDI por aplicación de anticipo"
+        };
+
+        const usoMap = {
+            "G01": "Adquisición de mercancías", "G02": "Devoluciones, descuentos o bonificaciones",
+            "G03": "Gastos en general", "D01": "Honorarios médicos, dentales y gastos hospitalarios",
+            "D02": "Gastos médicos por incapacidad o discapacidad", "D04": "Donativos",
+            "D05": "Intereses reales efectivamente pagados por créditos hipotecarios",
+            "D07": "Primas por seguros de gastos médicos", "D08": "Gastos de transportación escolar obligatoria",
+            "D10": "Pagos por servicios educativos (colegiaturas)", "P01": "Por definir",
+            "S01": "Sin efectos fiscales", "CP01": "Pagos", "CN01": "Nómina"
+        };
+
+        const relForma = {
+            "01": "Efectivo",
+            "02": "Cheque nominativo",
+            "03": "Transferencia electrónica de fondos",
+            "04": "Tarjeta de crédito",
+            "05": "Monedero electrónico",
+            "06": "Dinero electrónico",
+            "08": "Vales de despensa",
+            "12": "Dación en pago",
+            "13": "Pago por subrogación",
+            "14": "Pago por consignación",
+            "15": "Condonación",
+            "17": "Compensación",
+            "23": "Novación",
+            "24": "Confusión",
+            "25": "Remisión de deuda",
+            "26": "Prescripción o caducidad",
+            "27": "A satisfacción del acreedor",
+            "28": "Tarjeta de débito",
+            "29": "Tarjeta de servicios",
+            "30": "Aplicación de anticipos",
+            "31": "Intermediario pagos",
+            "99": "Por definir"
+        };
+
+        const labelsMap = { 'I': 'Ingreso', 'E': 'Egreso', 'P': 'Pago', 'N': 'Nómina' };
+
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => e.target.files[0] && processFile(e.target.files[0]);
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+        dropZone.ondrop = (e) => { e.preventDefault(); processFile(e.dataTransfer.files[0]); };
+        
+        document.getElementById('btnPrint').onclick = () => window.print();
+
+        function f(n) { return parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function getAt(el, ...atts) { for(let a of atts) { let v = el?.getAttribute(a); if(v) return v; } return ''; }
+        function findNodes(parent, name) { return Array.from(parent.querySelectorAll('*')).filter(node => node.nodeName.toLowerCase().split(':').pop() === name.toLowerCase()); }
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const xml = new DOMParser().parseFromString(e.target.result, "text/xml");
+                const comp = findNodes(xml, "Comprobante")[0];
+                const tipo = getAt(comp, "TipoDeComprobante");
+                if (tipo === 'P') renderPago(xml, comp);
+                else if (tipo === 'N' || findNodes(xml, "Nomina").length > 0) renderNomina(xml, comp);
+                else renderStandard(xml, comp, tipo);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderStandard(xml, comp, tipo) {
+            const emi = findNodes(xml, "Emisor")[0];
+            const rec = findNodes(xml, "Receptor")[0];
+            const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
+            const cfdiRel = findNodes(xml, "CfdiRelacionados")[0];
+            
+            const data = {
+                emi: { n: getAt(emi, "Nombre"), r: getAt(emi, "Rfc"), reg: getAt(emi, "RegimenFiscal") },
+                rec: { n: getAt(rec, "Nombre"), r: getAt(rec, "Rfc"), reg: getAt(rec, "RegimenFiscalReceptor"), uso: getAt(rec, "UsoCFDI") },
+                folio: (getAt(comp, "Serie") + " " + getAt(comp, "Folio")).trim() || 'S/F',
+                fecha: getAt(comp, "Fecha"), uuid: getAt(tfd, "UUID"),
+                subtotal: getAt(comp, "SubTotal"), total: getAt(comp, "Total"), 
+                metodo: getAt(comp, "MetodoPago"), forma: getAt(comp, "FormaPago"),
+                rel: cfdiRel ? { tipo: getAt(cfdiRel, "TipoRelacion"), uuid: getAt(findNodes(cfdiRel, "CfdiRelacionado")[0], "UUID") } : null,
+                taxes: []
+            };
+
+            const impG = findNodes(xml, "Impuestos").find(i => i.parentNode.nodeName.split(':').pop() === "Comprobante");
+            if(impG) {
+                findNodes(impG, "Traslado").forEach(t => {
+                    data.taxes.push({ l: getAt(t, "Impuesto") === "002" ? "IVA 16%" : "Otros Traslados", v: getAt(t, "Importe") });
+                });
+                findNodes(impG, "Retencion").forEach(r => {
+                    // Lógica mejorada para distinguir ISR (001) e IVA (002)
+                    let label = "Retención";
+                    const impId = getAt(r, "Impuesto");
+                    if (impId === "001") label = "Retención ISR";
+                    else if (impId === "002") label = "Retención IVA";
+                    
+                    data.taxes.push({ l: label, v: getAt(r, "Importe"), isRet: true });
+                });
+            }
+
+            setupUI(data, tipo);
+            const rows = findNodes(xml, "Concepto").map(c => `<tr><td class="p-4 text-xs font-mono text-slate-400">${getAt(c, "ClaveProdServ")}</td><td class="p-4 font-bold text-slate-700">${getAt(c, "Descripcion")}</td><td class="p-4 text-center">${getAt(c, "Cantidad")}</td><td class="p-4 text-right">$${f(getAt(c, "ValorUnitario"))}</td><td class="p-4 text-right font-bold">$${f(getAt(c, "Importe"))}</td></tr>`).join('');
+            document.getElementById('v-table-head').innerHTML = `<tr><th class="p-4 text-[10px]">Clave</th><th class="p-4 text-[10px]">Descripción</th><th class="p-4 text-center text-[10px]">Cant</th><th class="p-4 text-right text-[10px]">Unitario</th><th class="p-4 text-right text-[10px]">Importe</th></tr>`;
+            document.getElementById('v-table-body').innerHTML = rows;
+            fillTotales(data);
+        }
+
+        function renderPago(xml, comp) {
+            const emi = findNodes(xml, "Emisor")[0];
+            const rec = findNodes(xml, "Receptor")[0];
+            const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
+            const totalesNode = findNodes(xml, "Totales")[0];
+            let sumaBaseIVA = 0, sumaImporteIVA = 0, tableRows = [];
+
+            findNodes(xml, "Pago").forEach(p => {
+                tableRows.push(`<tr class="bg-slate-50/50"><td class="p-4 text-xs font-bold text-slate-900">${getAt(p, "FechaPago").split('T')[0]}</td><td class="p-4">Pago vía ${relForma[getAt(p, "FormaDePagoP")] || getAt(p, "FormaDePagoP")}</td><td class="p-4 text-center font-bold text-slate-600">${getAt(p, "MonedaP")}</td><td class="p-4 text-right text-slate-400 uppercase text-[10px]">Monto:</td><td class="p-4 text-right font-black text-green-600">$${f(getAt(p, "Monto"))}</td></tr>`);
+                findNodes(p, "DoctoRelacionado").forEach(dr => {
+                    findNodes(dr, "TrasladoDR").forEach(t => { if (getAt(t, "ImpuestoDR") === "002") { sumaBaseIVA += parseFloat(getAt(t, "BaseDR") || 0); sumaImporteIVA += parseFloat(getAt(t, "ImporteDR") || 0); } });
+                    tableRows.push(`<tr><td class="p-3 text-[10px] text-slate-400">DOC REL</td><td class="p-3 text-[10px] font-mono italic" colspan="2">${getAt(dr, "IdDocumento")}</td><td class="p-3 text-right text-[10px] text-slate-400 italic">Imp. Pagado:</td><td class="p-3 text-right text-[11px] font-bold text-slate-700">$${f(getAt(dr, "ImpPagado"))}</td></tr>`);
+                });
+            });
+
+            const data = {
+                emi: { n: getAt(emi, "Nombre"), r: getAt(emi, "Rfc"), reg: getAt(emi, "RegimenFiscal") },
+                rec: { n: getAt(rec, "Nombre"), r: getAt(rec, "Rfc"), reg: getAt(rec, "RegimenFiscalReceptor"), uso: getAt(rec, "UsoCFDI") },
+                folio: (getAt(comp, "Serie") + " " + getAt(comp, "Folio")).trim() || 'S/F',
+                fecha: getAt(comp, "Fecha"), uuid: getAt(tfd, "UUID"),
+                total: getAt(totalesNode, "MontoTotalPagos"), rel: null, taxes: []
+            };
+            if(sumaBaseIVA > 0) data.taxes.push({ l: 'Base IVA Trasladado (DR)', v: sumaBaseIVA, isBase: true });
+            if(sumaImporteIVA > 0) data.taxes.push({ l: 'IVA Trasladado (DR)', v: sumaImporteIVA });
+
+            setupUI(data, 'P');
+            document.getElementById('v-table-head').innerHTML = `<tr><th class="p-4 text-[10px]">Fecha</th><th class="p-4 text-[10px]">Concepto / UUID</th><th class="p-4 text-center text-[10px]">Moneda</th><th class="p-4 text-right text-[10px]">Detalle</th><th class="p-4 text-right text-[10px]">Monto</th></tr>`;
+            document.getElementById('v-table-body').innerHTML = tableRows.join('');
+            fillTotales(data, "TOTAL MONTO PAGOS");
+        }
+
+
+        function renderNomina(xml, comp) {
+            const emi = findNodes(xml, "Emisor")[0];
+            const rec = findNodes(xml, "Receptor")[0];
+            const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
+            const nomina = findNodes(xml, "Nomina")[0];
+            const receptorNom = findNodes(nomina, "Receptor")[0];
+
+            let tableRows = [];
+            let totalPercepciones = 0;
+            let totalDeducciones = 0;
+
+            // Procesar Percepciones
+            const percepciones = findNodes(nomina, "Percepciones")[0];
+            if (percepciones) {
+                totalPercepciones = parseFloat(getAt(percepciones, "TotalGravado") || 0) + parseFloat(getAt(percepciones, "TotalExento") || 0);
+                findNodes(percepciones, "Percepcion").forEach(p => {
+                    const importe = parseFloat(getAt(p, "ImporteGravado") || 0) + parseFloat(getAt(p, "ImporteExento") || 0);
+                    tableRows.push(`
+                        <tr>
+                            <td class="p-4 text-xs font-mono text-blue-500 font-bold">${getAt(p, "Clave")}</td>
+                            <td class="p-4 font-bold text-slate-700">${getAt(p, "Concepto")} <span class="text-[10px] text-slate-400 font-normal ml-2">(Percepción)</span></td>
+                            <td class="p-4 text-center text-xs text-slate-400">${getAt(p, "TipoPercepcion")}</td>
+                            <td class="p-4 text-right text-slate-400">-</td>
+                            <td class="p-4 text-right font-bold text-slate-900">$${f(importe)}</td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // Procesar Deducciones
+            const deducciones = findNodes(nomina, "Deducciones")[0];
+            if (deducciones) {
+                totalDeducciones = parseFloat(getAt(deducciones, "TotalOtrasDeducciones") || 0) + parseFloat(getAt(deducciones, "TotalImpuestosRetenidos") || 0);
+                findNodes(deducciones, "Deduccion").forEach(d => {
+                    tableRows.push(`
+                        <tr>
+                            <td class="p-4 text-xs font-mono text-red-400 font-bold">${getAt(d, "Clave")}</td>
+                            <td class="p-4 font-bold text-slate-700">${getAt(d, "Concepto")} <span class="text-[10px] text-slate-400 font-normal ml-2">(Deducción)</span></td>
+                            <td class="p-4 text-center text-xs text-slate-400">${getAt(d, "TipoDeduccion")}</td>
+                            <td class="p-4 text-right text-red-500">-$${f(getAt(d, "Importe"))}</td>
+                            <td class="p-4 text-right text-slate-400">-</td>
+                        </tr>
+                    `);
+                });
+            }
+
+            const data = {
+                emi: { n: getAt(emi, "Nombre"), r: getAt(emi, "Rfc"), reg: getAt(emi, "RegimenFiscal") },
+                rec: { n: getAt(rec, "Nombre"), r: getAt(rec, "Rfc"), reg: getAt(rec, "RegimenFiscalReceptor"), uso: getAt(rec, "UsoCFDI") },
+                folio: (getAt(comp, "Serie") + " " + getAt(comp, "Folio")).trim() || 'S/F',
+                fecha: getAt(comp, "Fecha"), uuid: getAt(tfd, "UUID"),
+                subtotal: totalPercepciones,
+                total: getAt(comp, "Total"),
+                taxes: [{ l: "Deducciones Totales", v: totalDeducciones, isRet: true }]
+            };
+
+            setupUI(data, 'N');
+            document.getElementById('v-metodo-forma-display').innerHTML = `CURP: ${getAt(receptorNom, "Curp")} <br> Num Emp: ${getAt(receptorNom, "NumEmpleado") || '---'}`;
+            document.getElementById('v-table-head').innerHTML = `<tr><th class="p-4 text-[10px]">Clave</th><th class="p-4 text-[10px]">Concepto</th><th class="p-4 text-center text-[10px]">Tipo</th><th class="p-4 text-right text-[10px]">Deducción</th><th class="p-4 text-right text-[10px]">Percepción</th></tr>`;
+            document.getElementById('v-table-body').innerHTML = tableRows.join('');
+            fillTotales(data, "NETO A PAGAR");
+        }
+
+        function setupUI(data, tipo) {
+            preview.classList.remove('theme-I', 'theme-E', 'theme-P', 'theme-N', 'hidden');
+            preview.classList.add(`theme-${tipo}`);
+            const badge = document.getElementById('badge-tipo');
+            badge.textContent = labelsMap[tipo] || 'CFDI';
+            badge.style.backgroundColor = 'var(--theme-color)';
+            document.getElementById('v-emi-nom').textContent = data.emi.n;
+            document.getElementById('v-emi-rfc').textContent = data.emi.r;
+            document.getElementById('v-emi-regimen').textContent = `Régimen: ${data.emi.reg || 'No disponible'}`;
+            document.getElementById('v-rec-nom').textContent = data.rec.n || 'Público en General';
+            document.getElementById('v-rec-rfc').textContent = data.rec.r;
+            document.getElementById('v-rec-regimen').textContent = `Régimen: ${data.rec.reg || 'No disponible'}`;
+            document.getElementById('v-doc-label').textContent = tipo === 'P' ? 'PAGO' : (tipo === 'N' ? 'NÓMINA' : 'CFDI');
+            document.getElementById('v-folio').textContent = `Folio: ${data.folio}`;
+            document.getElementById('v-fecha').textContent = data.fecha;
+            document.getElementById('v-uuid').textContent = data.uuid;
+            const metSeccion = document.getElementById('v-metodo-seccion');
+            const relSeccion = document.getElementById('v-relacionados-seccion');
+            metSeccion.style.display = (tipo === 'P' || tipo === 'N') ? 'none' : 'block';
+            document.getElementById('v-metodo-forma-display').textContent = `${data.metodo || '---'} | ${data.forma}: ${relForma[data.forma] || '---'}`;
+            if ((tipo === 'I' || tipo === 'E') && data.rel) {
+                relSeccion.classList.remove('hidden');
+                document.getElementById('v-rel-tipo').textContent = `${data.rel.tipo}: ${relMap[data.rel.tipo] || 'Tipo desconocido'}`;
+                document.getElementById('v-rel-uuid').textContent = data.rel.uuid;
+            } else { relSeccion.classList.add('hidden'); }
+            const usoDesc = usoMap[data.rec.uso] || 'Sin descripción';
+            document.getElementById('v-uso-detalle').textContent = `${data.rec.uso} - ${usoDesc}`;
+        }
+
+        function fillTotales(data, totalLabel) {
+            let html = '';
+            if(data.subtotal) html += `<div class="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-tighter"><span>Subtotal</span><span>$${f(data.subtotal)}</span></div>`;
+            data.taxes.forEach(t => {
+                const color = t.isBase ? 'text-slate-400 italic' : (t.isRet ? 'text-red-600 font-bold' : 'text-slate-600 font-bold');
+                html += `<div class="flex justify-between text-xs ${color}"><span>${t.l}</span><span>${t.isRet ? '- ' : ''}$${f(t.v)}</span></div>`;
+            });
+            html += `<div class="pt-4 border-t border-slate-200 flex justify-between items-center"><span class="text-xs font-black uppercase text-slate-800 tracking-widest">${totalLabel || 'TOTAL'}</span><span class="text-xl font-black text-slate-900">$${f(data.total)}</span></div>`;
+            document.getElementById('v-totales-cont').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
