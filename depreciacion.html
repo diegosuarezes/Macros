@@ -432,51 +432,66 @@ function limpiarFormulario() {
         // Ejecutar cálculo al arrancar
         // window.onload = calcularTodo;
 
-        function descargarExcelDepreciacion() {
-    // 1. Capturar los datos actuales del formulario (Igual que en tu función calcular)
+function descargarExcelDepreciacion() {
+    // 1. Jalamos los datos directos de tus INPUTS usando tus IDs reales
+    const nombreActivo = document.getElementById('nombre').value || "Activo Sin Nombre";
     const moi = parseFloat(document.getElementById('moi').value) || 0;
-    const porcentaje = parseFloat(document.getElementById('porcentaje').value) || 0;
-    const fechaAdq = document.getElementById('fechaAdq').value;
+    const fechaAdq = document.getElementById('fecha').value; 
+    const fechaCorte = document.getElementById('fechaCorte').value; 
     
-    // Capturamos los resultados que ya calculó tu sistema en la pantalla
-    // (Asegúrate de que los IDs coincidan con los de tus <span> o <p> de resultados)
-    const factorAct = document.getElementById('resFactorAct').innerText; // El 1.0000 truncado
-    const dedContable = document.getElementById('resDedContable').innerText;
-    const dedFiscal = document.getElementById('resDedFiscal').innerText;
+    // Para el porcentaje leemos el texto del select seleccionado
+    const selectPorcentaje = document.getElementById('porcentaje');
+    const porcentajeTexto = selectPorcentaje.options[selectPorcentaje.selectedIndex].text;
 
     if (moi <= 0) {
-        alert("Primero realiza un cálculo para poder descargar el reporte.");
+        alert("Por favor, captura un MOI válido y calcula antes de descargar.");
         return;
     }
 
-    // 2. Crear la matriz de datos para el Excel (Filas y Columnas)
-    const datosExcel = [
-        ["REPORTE DE DEDUCCIÓN DE INVERSIONES (FISCAL Y CONTABLE)"],
-        [], // Fila vacía
-        ["CONCEPTO", "VALOR"],
+    // 2. Jalamos los RESULTADOS que ya tienes calculados en pantalla
+    const mesesUso = document.getElementById('resMesesUso').innerText;
+    const factorAct = document.getElementById('resFactor').innerText;
+    const deduccionFiscal = document.getElementById('resDeduccionFiscal').innerText;
+    
+    const inpcAdq = document.getElementById('valInpcAdq').innerText;
+    const mesMitad = document.getElementById('valMesMitad').innerText;
+    const inpcMitad = document.getElementById('valInpcMitad').innerText;
+    const deduccionFinal = document.getElementById('valDedFinal').innerText;
+
+    // 3. Estructuramos el reporte para Excel
+    const reporte = [
+        ["🧾 REPORTE DE DEDUCCIÓN DE INVERSIONES FISCAL"],
+        [],
+        ["DATOS DEL ACTIVO", "VALOR"],
+        ["Nombre del Activo", nombreActivo],
         ["Monto Original de la Inversión (MOI)", moi],
-        ["% de Depreciación Anual", porcentaje + "%"],
+        ["Tasa de Depreciación Anual", porcentajeTexto],
         ["Fecha de Adquisición", fechaAdq],
+        ["Fecha de Corte / Último mes de uso", fechaCorte],
         [],
-        ["RESUMEN DE RESULTADOS"],
+        ["📊 CÁLCULO DEL FACTOR DE ACTUALIZACIÓN"],
+        ["INPC Adquisición (Mes anterior publicado)", inpcAdq],
+        ["Mes de la Mitad del Periodo de Uso", mesMitad],
+        ["INPC Mitad del Periodo (Mes anterior publicado)", inpcMitad],
         ["Factor de Actualización (CFF Art 17-A)", factorAct],
-        ["Depreciación Contable del Ejercicio", dedContable],
-        ["Deducción Fiscal Actualizada del Ejercicio", dedFiscal],
         [],
-        ["Reporte generado automáticamente por la plataforma de Diego Suárez."]
+        ["📉 RESULTADOS DEL EJERCICIO"],
+        ["Meses de Uso en el Ejercicio", mesesUso],
+        ["Deducción Fiscal del Ejercicio", deduccionFiscal],
+        ["Deducción Final Actualizada", deduccionFinal],
+        [],
+        ["Reporte generado por el portafolio de Diego Suárez."]
     ];
 
-    // 3. Crear el libro de trabajo de Excel (Workbook)
+    // 4. Crear el archivo y disparar descarga
     const libro = XLSX.utils.book_new();
-    const hoja = XLSX.utils.aoa_to_sheet(datosExcel);
+    const hoja = XLSX.utils.aoa_to_sheet(reporte);
 
-    // Ajustar el ancho de la columna A y B para que no se vea amontonado
-    hoja['!cols'] = [{ wch: 45 }, { wch: 20 }];
+    // Darle buen tamaño a las columnas A y B en Excel
+    hoja['!cols'] = [{ wch: 45 }, { wch: 25 }]; 
 
     XLSX.utils.book_append_sheet(libro, hoja, "Depreciación Fiscal");
-
-    // 4. Disparar la descarga del archivo en el navegador
-    XLSX.writeFile(libro, `Reporte_Depreciacion_${fechaAdq}.xlsx`);
+    XLSX.writeFile(libro, `Reporte_Depreciacion_${nombreActivo.replace(/\s+/g, '_')}.xlsx`);
 }
 
 
