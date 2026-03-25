@@ -350,19 +350,20 @@ let fechaMitad = new Date(fechaComparacionInicio);
 fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
 
 // REGLA DIEGO: Obtener el mes publicado anterior (N-1) del INPC
+// 1. Para la adquisición se queda IGUAL (Mes Anterior al de adquisición)
 let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq); 
 let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
 
-let mesAnteriorMitadObj = obtenerMesAnterior(fechaMitad); 
-let inpcMitadPublicado = baseINPC[mesAnteriorMitadObj];
+// 2. NUEVA REGLA: Para la mitad del periodo se usa el MES DIRECTO (Sin restar)
+let inpcMitadPublicado = baseINPC[fechaMitad]; // 👈 Aquí quitamos el "obtenerMesAnterior"
 
+// 3. Todo lo demás sigue su curso normal
 let factorAct = inpcMitadPublicado / inpcAdqPublicado;
 
-// Aplicar Regla del CFF (Deflación y Truncado)
 if (factorAct < 1) {
     factorAct = 1.0000;
 } else {
-    factorAct = Math.floor(factorAct * 10000) / 10000; // El estándar del SAT
+    factorAct = Math.floor(factorAct * 10000) / 10000; // Truncado a 4 decimales
 }
 
 let dedAnualFiscal = moi * porcentaje;
