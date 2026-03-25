@@ -162,7 +162,7 @@
     </div>
 
     <script>
-        // Simulador de Base de Datos INPC Histórico para que funcione el cálculo
+       // Simulador de Base de Datos INPC Histórico para que funcione el cálculo
 const baseINPC = {
   "2026-02": 144.307,"2026-01": 143.588,
   "2025-12": 143.042,"2025-11": 142.645,"2025-10": 141.708,"2025-09": 141.197,"2025-08": 140.867,"2025-07": 140.78,"2025-06": 140.405,"2025-05": 140.012,"2025-04": 139.62,"2025-03": 139.161,"2025-02": 138.726,"2025-01": 138.343,
@@ -194,7 +194,7 @@ const baseINPC = {
   "1999-12": 44.336, "1999-11": 43.896, "1999-10": 43.509, "1999-09": 43.235, "1999-08": 42.821, "1999-07": 42.582, "1999-06": 42.302, "1999-05": 42.026, "1999-04": 41.775, "1999-03": 41.395, "1999-02": 41.014, "1999-01": 40.47,
   "1998-12": 39.473, "1998-11": 38.533, "1998-10": 37.862, "1998-09": 37.327, "1998-08": 36.732, "1998-07": 36.382, "1998-06": 36.034, "1998-05": 35.613, "1998-04": 35.332, "1998-03": 35.005, "1998-02": 34.599, "1998-01": 34.004,
   "1997-12": 33.28, "1997-11": 32.82, "1997-10": 32.457, "1997-09": 32.2, "1997-08": 31.804, "1997-07": 31.523, "1997-06": 31.251, "1997-05": 30.976, "1997-04": 30.696, "1997-03": 30.368, "1997-02": 29.995, "1997-01": 29.499,
-  "1996-12": 28.759, "1996-11": 27.867, "1996-10": 27.451, "1996-09": 27.113, "1996-08": 26.686, "1996-07": 26.336, "1996-06": 25.967, "1996-05": 25.551, "1996-04": 25.093, "1996-03": 24.4, "1996-02": 23.874, "1996-01": 23.33,
+  "1996-12": 28.759, "1996-11": 27.867, "1996-10": 27.451, "1996-09": 27.113, "1996-08": 26.686, "1996-07": 26.336, "1996-06": 25.967, "1996-05": 25.551, "1996-04": 25.093, "1996-03": 24.4, "1996-03": 24.4, "1996-02": 23.874, "1996-01": 23.33,
   "1995-12": 22.52, "1995-11": 21.81, "1995-10": 21.285, "1995-09": 20.856, "1995-08": 20.433, "1995-07": 20.1, "1995-06": 19.698, "1995-05": 19.092, "1995-04": 18.326, "1995-03": 16.974, "1995-02": 16.029, "1995-01": 15.377,
   "1994-12": 14.819, "1994-11": 14.69, "1994-10": 14.612, "1994-09": 14.536, "1994-08": 14.433, "1994-07": 14.366, "1994-06": 14.303, "1994-05": 14.232, "1994-04": 14.163, "1994-03": 14.094, "1994-02": 14.022, "1994-01": 13.95,
   "1993-12": 13.843, "1993-11": 13.738, "1993-10": 13.678, "1993-09": 13.622, "1993-08": 13.522, "1993-07": 13.45, "1993-06": 13.386, "1993-05": 13.311, "1993-04": 13.235, "1993-03": 13.16, "1993-02": 13.083, "1993-01": 12.977,
@@ -222,171 +222,139 @@ const baseINPC = {
   "1971-12": 0.013, "1971-11": 0.013, "1971-10": 0.013, "1971-09": 0.013, "1971-08": 0.013, "1971-07": 0.013, "1971-06": 0.013, "1971-05": 0.013, "1971-04": 0.013, "1971-03": 0.013, "1971-02": 0.013, "1971-01": 0.013,
   "1970-12": 0.013, "1970-11": 0.013, "1970-10": 0.013, "1970-09": 0.012, "1970-08": 0.012, "1970-07": 0.012, "1970-06": 0.012, "1970-05": 0.012, "1970-04": 0.012, "1970-03": 0.012, "1970-02": 0.012, "1970-01": 0.012,
   "1969-12": 0.012, "1969-11": 0.012, "1969-10": 0.012, "1969-09": 0.012, "1969-08": 0.012, "1969-07": 0.012, "1969-06": 0.012, "1969-05": 0.012, "1969-04": 0.012, "1969-03": 0.012, "1969-02": 0.012
-
 };
 
-        const formateador = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+const formateador = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-        function calcularTodo() {
-            const moi = parseFloat(document.getElementById('moi').value);
-            const porcentaje = parseFloat(document.getElementById('porcentaje').value) / 100;
-            const fechaAdqInput = document.getElementById('fecha').value; // Formato "AAAA-MM"
+function calcularTodo() {
+    const moi = parseFloat(document.getElementById('moi').value);
+    const porcentaje = parseFloat(document.getElementById('porcentaje').value) / 100;
+    const fechaAdqInput = document.getElementById('fecha').value;
 
-            if (!moi || !fechaAdqInput || moi <= 0) {
-                alert("Por favor captura datos válidos.");
-                return;
+    if (!moi || !fechaAdqInput || moi <= 0) {
+        alert("Por favor captura datos válidos.");
+        return;
+    }
+
+    // 🧮 1. DEPRECIACIÓN CONTABLE
+    const fechaCorteContableInput = document.getElementById('fechaCorte').value;
+    if (!fechaCorteContableInput) {
+        alert("Por favor selecciona una fecha de corte.");
+        return;
+    }
+
+    const depAnualContable = moi * porcentaje;
+    const depMensualContable = depAnualContable / 12;
+
+    document.getElementById('resAnuContable').innerText = formateador.format(depAnualContable);
+    document.getElementById('resMenContable').innerText = formateador.format(depMensualContable);
+
+    const cuerpoContable = document.getElementById('cuerpoContable');
+    cuerpoContable.innerHTML = '';
+
+    let vLibros = moi;
+    let fechaAdquisicion = new Date(fechaAdqInput + "-02");
+    let fechaCorteContable = new Date(fechaCorteContableInput + "-28");
+
+    let fechaProyeccion = new Date(fechaAdquisicion);
+    fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
+
+    if (fechaCorteContable < fechaProyeccion) {
+        cuerpoContable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-amber-400">El activo aún no empieza a depreciarse contablemente en esta fecha de corte.</td></tr>`;
+    } else {
+        while (fechaProyeccion <= fechaCorteContable) {
+            vLibros -= depMensualContable;
+            if (vLibros < 1) {
+                vLibros = 1.00;
             }
 
-            // 🧮 1. DEPRECIACIÓN CONTABLE (Corregida)
-const fechaCorteContableInput = document.getElementById('fechaCorte').value;
+            let mesString = fechaProyeccion.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }).toUpperCase();
+            cuerpoContable.innerHTML += `
+                <tr class="hover:bg-slate-700 transition">
+                    <td class="p-2 border-b border-slate-700">${mesString}</td>
+                    <td class="p-2 border-b border-slate-700">${formateador.format(depMensualContable)}</td>
+                    <td class="p-2 border-b border-slate-700 font-semibold ${vLibros <= 1 ? 'text-amber-400' : 'text-slate-300'}">${formateador.format(vLibros)}</td>
+                </tr>
+            `;
 
-if (!fechaCorteContableInput) {
-    alert("Por favor selecciona una fecha de corte.");
-    return;
-}
+            if (vLibros === 1.00) {
+                break;
+            }
 
-const depAnualContable = moi * porcentaje;
-const depMensualContable = depAnualContable / 12;
-
-document.getElementById('resAnuContable').innerText = formateador.format(depAnualContable);
-document.getElementById('resMenContable').innerText = formateador.format(depMensualContable);
-
-const cuerpoContable = document.getElementById('cuerpoContable');
-cuerpoContable.innerHTML = ''; // Limpiar tabla
-
-let vLibros = moi;
-
-// Crear fechas en JavaScript (usamos el día 2 para evitar errores de zonas horarias)
-let fechaAdquisicion = new Date(fechaAdqInput + "-02");
-let fechaCorteContable = new Date(fechaCorteContableInput + "-28");
-
-// REGLA: La depreciación empieza el MES SIGUIENTE de la adquisición
-let fechaProyeccion = new Date(fechaAdquisicion);
-fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
-
-// Si la fecha de corte es menor al mes de inicio de uso
-if (fechaCorteContable < fechaProyeccion) {
-    cuerpoContable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-amber-400">El activo aún no empieza a depreciarse contablemente en esta fecha de corte.</td></tr>`;
-} else {
-    // Bucle MIENTRAS la fecha proyectada sea menor o igual a la fecha de corte
-    while (fechaProyeccion <= fechaCorteContable) {
-        vLibros -= depMensualContable;
-        
-        // No permitir valores negativos (Valor de rescate $1.00)
-        if (vLibros < 1) {
-            vLibros = 1.00;
+            fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
         }
-
-        let mesString = fechaProyeccion.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }).toUpperCase();
-
-        cuerpoContable.innerHTML += `
-            <tr class="hover:bg-slate-700 transition">
-                <td class="p-2 border-b border-slate-700">${mesString}</td>
-                <td class="p-2 border-b border-slate-700">${formateador.format(depMensualContable)}</td>
-                <td class="p-2 border-b border-slate-700 font-semibold ${vLibros <= 1 ? 'text-amber-400' : 'text-slate-300'}">${formateador.format(vLibros)}</td>
-            </tr>
-        `;
-
-        // Si ya llegó al valor de rescate, rompemos el ciclo para no generar filas infinitas de $1 peso
-        if (vLibros === 1.00) {
-            break; 
-        }
-
-        fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
     }
-}
 
 
-// ⚖️ 2. DEDUCCIÓN DE INVERSIONES FISCAL (Corte Dinámico)
-const fechaCorteInput = document.getElementById('fechaCorte').value; // Formato "AAAA-MM"
+    // ⚖️ 2. DEDUCCIÓN DE INVERSIONES FISCAL
+    const fechaCorteInput = document.getElementById('fechaCorte').value;
 
-if (!fechaCorteInput) {
-    alert("Por favor selecciona una fecha de corte.");
-    return;
-}
+    if (!fechaCorteInput) {
+        alert("Por favor selecciona una fecha de corte.");
+        return;
+    }
 
-let fechaAdq = new Date(fechaAdqInput + "-02");
-let fechaCorte = new Date(fechaCorteInput + "-02");
+    let fechaAdq = new Date(fechaAdqInput + "-02");
+    let fechaCorte = new Date(fechaCorteInput + "-02");
+    let inicioUso = new Date(fechaAdqInput + "-02");
+    inicioUso.setMonth(inicioUso.getMonth() + 1);
 
-let inicioUso = new Date(fechaAdqInput + "-02");
-inicioUso.setMonth(inicioUso.getMonth() + 1); // Se empieza a usar el mes siguiente
+    if (fechaCorte < inicioUso) {
+        alert("La fecha de corte no puede ser menor al inicio de uso del activo.");
+        return;
+    }
 
-if (fechaCorte < inicioUso) {
-    alert("La fecha de corte no puede ser menor al inicio de uso del activo.");
-    return;
-}
+    const anioCorte = fechaCorte.getFullYear();
+    let inicioEjercicio = new Date(anioCorte, 0, 1);
+    let fechaComparacionInicio = inicioUso > inicioEjercicio ? inicioUso : inicioEjercicio;
+    let mesesUsoEnAnio = (fechaCorte.getFullYear() - fechaComparacionInicio.getFullYear()) * 12 + (fechaCorte.getMonth() - fechaComparacionInicio.getMonth() + 1);
+    if (mesesUsoEnAnio > 12) mesesUsoEnAnio = 12;
+    if (mesesUsoEnAnio < 0) mesesUsoEnAnio = 0;
 
-// Sacar el ejercicio (año) de la fecha de corte para evaluar ese periodo fiscal
-const anioCorte = fechaCorte.getFullYear();
+    document.getElementById('resMesesUso').innerText = mesesUsoEnAnio;
+    if (mesesUsoEnAnio <= 0) {
+        alert("El activo no se utilizó en el ejercicio de la fecha de corte.");
+        return;
+    }
 
-// Contar meses de uso del ejercicio actual (del 1 de enero del año de corte hasta la fecha de corte)
-let inicioEjercicio = new Date(anioCorte, 0, 1); // 1 de Enero del año de corte
-let fechaComparacionInicio = inicioUso > inicioEjercicio ? inicioUso : inicioEjercicio;
+    let mesMitadNumero = 0;
+    if (mesesUsoEnAnio % 2 === 0) {
+        mesMitadNumero = mesesUsoEnAnio / 2;
+    } else {
+        mesMitadNumero = Math.floor(mesesUsoEnAnio / 2);
+    }
 
-// Calcular diferencia de meses en ese año específico
-let mesesUsoEnAnio = (fechaCorte.getFullYear() - fechaComparacionInicio.getFullYear()) * 12 + (fechaCorte.getMonth() - fechaComparacionInicio.getMonth() + 1);
+    let fechaMitad = new Date(fechaComparacionInicio);
+    fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
 
-// Tope de 12 meses si por matemáticas da más en un solo ejercicio fiscal
-if (mesesUsoEnAnio > 12) mesesUsoEnAnio = 12; 
-if (mesesUsoEnAnio < 0) mesesUsoEnAnio = 0;
+    let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq);
+    let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
 
-document.getElementById('resMesesUso').innerText = mesesUsoEnAnio;
+    let mesDirectoMitadObj = formatearMesDirecto(fechaMitad);
+    let inpcMitadPublicado = baseINPC[mesDirectoMitadObj];
 
-if (mesesUsoEnAnio <= 0) {
-    alert("El activo no se utilizó en el ejercicio de la fecha de corte.");
-    return;
-}
+    let factorAct = inpcMitadPublicado / inpcAdqPublicado;
+    if (factorAct < 1) {
+        factorAct = 1.0000;
+    } else {
+        factorAct = Math.floor(factorAct * 10000) / 10000;
+    }
 
-// ⚖️ Encontrar último mes de la primera mitad del periodo
-let mesMitadNumero = 0;
-if (mesesUsoEnAnio % 2 === 0) { // PAR
-    mesMitadNumero = mesesUsoEnAnio / 2;
-} else { // IMPAR (Regla de Diego / LISR)
-    mesMitadNumero = Math.floor(mesesUsoEnAnio / 2); // Trunca al entero inferior
-}
+    let dedAnualFiscal = moi * porcentaje;
+    let proporcionUso = mesesUsoEnAnio / 12;
+    let dedEjercicioFinal = dedAnualFiscal * proporcionUso * factorAct;
 
-// Mapear qué mes es ese en el calendario real para buscar el INPC
-let fechaMitad = new Date(fechaComparacionInicio);
-fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
+    document.getElementById('resFactor').innerText = factorAct.toFixed(4);
+    document.getElementById('resDeduccionFiscal').innerText = formateador.format(dedEjercicioFinal);
 
-// REGLA DIEGO: Obtener el mes publicado anterior (N-1) del INPC
-// 1. Para la adquisición se queda IGUAL (Mes Anterior al de adquisición)
-let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq); 
-let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
+    document.getElementById('valInpcAdq').innerText = inpcAdqPublicado;
+    document.getElementById('valMesMitad').innerText = mesDirectoMitadObj; 
+    document.getElementById('valInpcMitad').innerText = inpcMitadPublicado;
 
-// NUEVA LÍNEA: Usamos la nueva función para NO restar un mes
-let mesDirectoMitadObj = formatearMesDirecto(fechaMitad); 
-let inpcMitadPublicado = baseINPC[mesDirectoMitadObj]; // 👈 Jala el INPC del mes directo (Junio)
+    document.getElementById('valMoiBase').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moi);
+    document.getElementById('valDedFinal').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(dedEjercicioFinal);
+} // 👈 ¡AQUÍ ESTABA LA LLAVE DE CIERRE QUE FALTABA!
 
-// 3. Todo lo demás sigue su curso normal
-let factorAct = inpcMitadPublicado / inpcAdqPublicado;
-
-if (factorAct < 1) {
-    factorAct = 1.0000;
-} else {
-    factorAct = Math.floor(factorAct * 10000) / 10000; // Truncado a 4 decimales
-}
-
-let dedAnualFiscal = moi * porcentaje;
-let proporcionUso = mesesUsoEnAnio / 12;
-let dedEjercicioFinal = dedAnualFiscal * proporcionUso * factorAct;
-
-// Actualizar interfaz Fiscal
-document.getElementById('resFactor').innerText = factorAct.toFixed(4);
-document.getElementById('resDeduccionFiscal').innerText = formateador.format(dedEjercicioFinal);
-
-// 📊 1. Pintamos los INPCs y las fechas en la memoria de cálculo
-document.getElementById('valInpcAdq').innerText = inpcAdqPublicado;
-
-// Usamos la NUEVA variable directa (Sin restar mes) que creamos con tus colegas
-document.getElementById('valMesMitad').innerText = mesDirectoMitadObj; 
-document.getElementById('valInpcMitad').innerText = inpcMitadPublicado;
-
-// 💵 2. Pintamos los montos de dinero formateados como Moneda (MXN)
-document.getElementById('valMoiBase').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moi);
-
-document.getElementById('valDedFinal').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(dedEjercicioFinal);
-// Para la Adquisición (Resta 1 mes)
 function obtenerMesAnterior(dateObj) {
     let temp = new Date(dateObj);
     temp.setMonth(temp.getMonth() - 1);
@@ -394,44 +362,40 @@ function obtenerMesAnterior(dateObj) {
     return `${temp.getFullYear()}-${m}`;
 }
 
-// NUEVA: Para la Mitad del Periodo (Mismo mes directo, solo formatea a "YYYY-MM")
 function formatearMesDirecto(dateObj) {
     let temp = new Date(dateObj);
     let m = (temp.getMonth() + 1).toString().padStart(2, '0');
     return `${temp.getFullYear()}-${m}`;
 }
 
-        
-        function cambiarTab(tab) {
-            if (tab === 'contable') {
-                document.getElementById('tab-contable').classList.remove('hidden');
-                document.getElementById('tab-fiscal').classList.add('hidden');
-                document.getElementById('tab-contable-btn').classList.add('border-sky-500', 'text-sky-400');
-                document.getElementById('tab-contable-btn').classList.remove('border-transparent', 'text-slate-400');
-                document.getElementById('tab-fiscal-btn').classList.add('border-transparent', 'text-slate-400');
-                document.getElementById('tab-fiscal-btn').classList.remove('border-sky-500', 'text-sky-400');
-            } else {
-                document.getElementById('tab-fiscal').classList.remove('hidden');
-                document.getElementById('tab-contable').classList.add('hidden');
-                document.getElementById('tab-fiscal-btn').classList.add('border-sky-500', 'text-sky-400');
-                document.getElementById('tab-fiscal-btn').classList.remove('border-transparent', 'text-slate-400');
-                document.getElementById('tab-contable-btn').classList.add('border-transparent', 'text-slate-400');
-                document.getElementById('tab-contable-btn').classList.remove('border-sky-500', 'text-sky-400');
-            }
-        }
+function cambiarTab(tab) {
+    if (tab === 'contable') {
+        document.getElementById('tab-contable').classList.remove('hidden');
+        document.getElementById('tab-fiscal').classList.add('hidden');
+        document.getElementById('tab-contable-btn').classList.add('border-sky-500', 'text-sky-400');
+        document.getElementById('tab-contable-btn').classList.remove('border-transparent', 'text-slate-400');
+        document.getElementById('tab-fiscal-btn').classList.add('border-transparent', 'text-slate-400');
+        document.getElementById('tab-fiscal-btn').classList.remove('border-sky-500', 'text-sky-400');
+    } else {
+        document.getElementById('tab-fiscal').classList.remove('hidden');
+        document.getElementById('tab-contable').classList.add('hidden');
+        document.getElementById('tab-fiscal-btn').classList.add('border-sky-500', 'text-sky-400');
+        document.getElementById('tab-fiscal-btn').classList.remove('border-transparent', 'text-slate-400');
+        document.getElementById('tab-contable-btn').classList.add('border-transparent', 'text-slate-400');
+        document.getElementById('tab-contable-btn').classList.remove('border-sky-500', 'text-sky-400');
+    }
+}
+
 function limpiarFormulario() {
-    // 1. Limpiar Inputs
     document.getElementById('nombre').value = '';
     document.getElementById('moi').value = '';
     document.getElementById('fecha').value = '';
     document.getElementById('fechaCorte').value = '';
     document.getElementById('porcentaje').selectedIndex = 0;
 
-    // 2. Limpiar Resúmenes Contables
     document.getElementById('resMenContable').innerText = "---";
     document.getElementById('resAnuContable').innerText = "---";
-    
-    // 3. Limpiar Resúmenes Fiscales
+
     document.getElementById('resMesesUso').innerText = "---";
     document.getElementById('resFactor').innerText = "---";
     document.getElementById('resDeduccionFiscal').innerText = "---";
@@ -442,20 +406,15 @@ function limpiarFormulario() {
     document.getElementById('valMoiBase').innerText = "---";
     document.getElementById('valDedFinal').innerText = "---";
 
-    // 4. Reiniciar Tablas
     document.getElementById('cuerpoContable').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500">Ingresa los datos para generar la proyección.</td></tr>`;
 }
-        // Ejecutar cálculo al arrancar
-        // window.onload = calcularTodo;
 
 function descargarExcelDepreciacion() {
-    // 1. Jalamos los datos directos de tus INPUTS usando tus IDs reales
     const nombreActivo = document.getElementById('nombre').value || "Activo Sin Nombre";
     const moi = parseFloat(document.getElementById('moi').value) || 0;
     const fechaAdq = document.getElementById('fecha').value; 
-    const fechaCorte = document.getElementById('fechaCorte').value; 
-    
-    // Para el porcentaje leemos el texto del select seleccionado
+    const fechaCorte = document.getElementById('fechaCorte').value;
+
     const selectPorcentaje = document.getElementById('porcentaje');
     const porcentajeTexto = selectPorcentaje.options[selectPorcentaje.selectedIndex].text;
 
@@ -464,7 +423,6 @@ function descargarExcelDepreciacion() {
         return;
     }
 
-    // 2. Jalamos los RESULTADOS que ya tienes calculados en pantalla
     const mesesUso = document.getElementById('resMesesUso').innerText;
     const factorAct = document.getElementById('resFactor').innerText;
     const deduccionFiscal = document.getElementById('resDeduccionFiscal').innerText;
@@ -474,7 +432,6 @@ function descargarExcelDepreciacion() {
     const inpcMitad = document.getElementById('valInpcMitad').innerText;
     const deduccionFinal = document.getElementById('valDedFinal').innerText;
 
-    // 3. Estructuramos el reporte para Excel
     const reporte = [
         ["🧾 REPORTE DE DEDUCCIÓN DE INVERSIONES FISCAL"],
         [],
@@ -499,20 +456,14 @@ function descargarExcelDepreciacion() {
         ["Reporte generado por el portafolio de Diego Suárez."]
     ];
 
-    // 4. Crear el archivo y disparar descarga
     const libro = XLSX.utils.book_new();
     const hoja = XLSX.utils.aoa_to_sheet(reporte);
 
-    // Darle buen tamaño a las columnas A y B en Excel
     hoja['!cols'] = [{ wch: 45 }, { wch: 25 }]; 
 
     XLSX.utils.book_append_sheet(libro, hoja, "Depreciación Fiscal");
     XLSX.writeFile(libro, `Reporte_Depreciacion_${nombreActivo.replace(/\s+/g, '_')}.xlsx`);
-}
-
-
-
-        
+}        
     </script>
 
 </body>
