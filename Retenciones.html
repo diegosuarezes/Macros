@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor CFDI Retenciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root { --theme-color: #0f172a; --theme-bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .font-mono { font-family: 'JetBrains+Mono', monospace; }
+        
+        .invoice-box { max-width: 900px; margin: auto; background: white; border-left: 8px solid var(--theme-color); }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; }
+        .drop-zone.drag-over { border-color: #0f172a; background-color: #f8fafc; }
+
+        .complemento-card { border-left: 4px solid #3b82f6; background-color: #eff6ff; padding: 1.5rem; border-radius: 1rem; margin-bottom: 1.5rem; }
+
+        @media print {
+            @page { 
+                size: portrait;
+                margin: 0.5cm; 
+            }
+            html { font-size: 13px; } /* Reducción ligera de fuente para que quepa todo */
+            body { 
+                background: white !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            .invoice-box { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important;
+                width: 100% !important; 
+                max-width: 100% !important; 
+                margin: 0 !important;
+                padding: 1rem !important; /* Más compacto en impresión */
+                border-radius: 0 !important;
+                border-left: 4px solid var(--theme-color);
+            }
+            .grid { 
+                display: grid !important; 
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
+                gap: 1rem !important;
+            }
+            /* Evitar que los bloques se corten entre páginas */
+            .complemento-card, table, .bg-slate-50 {
+                break-inside: avoid;
+            }
+            /* Reducir márgenes inferiores de bloques */
+            .mb-10 { margin-bottom: 1.5rem !important; }
+            .pb-10 { padding-bottom: 1.5rem !important; }
+            .pt-10 { padding-top: 1.5rem !important; }
+        }
+    </style>
+</head>
+<body class="py-8 px-4">
+
+    <div class="max-w-4xl mx-auto no-print mb-8">
+        <div id="dropZone" class="drop-zone bg-white rounded-2xl p-10 text-center cursor-pointer shadow-sm">
+            <div class="flex flex-col items-center">
+                <div class="bg-slate-100 p-4 rounded-full mb-3 text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-slate-700">Cargar CFDI de Retenciones</h2>
+                <p class="text-sm text-slate-400">XML de Retenciones (Soporta múltiples complementos)</p>
+                <input type="file" id="fileInput" class="hidden" accept=".xml">
+            </div>
+        </div>
+    </div>
+
+    <div id="invoicePreview" class="invoice-box hidden p-8 md:p-12 rounded-3xl shadow-xl border border-slate-200">
+        <div class="flex justify-between items-start mb-10 no-print">
+            <div class="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest text-white bg-slate-900 shadow-md">Retenciones</div>
+            <button id="btnPrint" class="flex items-center gap-2 bg-red-800 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition-all hover:scale-105 active:scale-95 duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Exportar a PDF
+            </button>
+        </div>
+
+        <!-- Cabecera -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-slate-100 pb-10 mb-10">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest mb-2 text-slate-400">Emisor de Retención</p>
+                <h1 class="text-2xl font-black text-slate-900 leading-tight mb-1" id="v-emi-nom"></h1>
+                <p class="text-sm font-mono font-bold text-slate-500" id="v-emi-rfc"></p>
+                <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase" id="v-emi-regimen"></p>
+            </div>
+            <div class="md:text-right">
+                <h2 class="text-3xl font-black text-slate-200 italic">RETENCIONES</h2>
+                <p class="text-sm font-black text-slate-700" id="v-folio"></p>
+                <p class="text-xs font-mono text-slate-400" id="v-fecha"></p>
+            </div>
+        </div>
+
+        <!-- Periodo y Receptor -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="p-6 rounded-2xl border border-slate-100 bg-slate-50">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Receptor</p>
+                <p class="font-black text-slate-800 mb-1" id="v-rec-nom"></p>
+                <p class="text-sm font-mono font-bold text-slate-500" id="v-rec-rfc"></p>
+            </div>
+            
+            <div class="p-6 rounded-2xl border border-slate-900 bg-slate-900 text-white flex flex-col justify-center">
+                <p class="text-[10px] font-black uppercase tracking-widest mb-2 opacity-60 text-slate-300">Periodo de la Retención</p>
+                <div class="flex items-center gap-4">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase">Ejercicio</p>
+                        <p class="text-xl font-black" id="v-ejercicio"></p>
+                    </div>
+                    <div class="h-8 w-[1px] bg-slate-700"></div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase">Meses</p>
+                        <p class="text-lg font-bold" id="v-meses"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalles de Totales -->
+        <div class="mb-10 bg-slate-50 rounded-3xl p-8 border border-slate-100">
+            <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400 border-b border-slate-200 pb-2">Resumen de Operación</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Monto Tot. Operación</p>
+                    <p class="text-lg font-black text-slate-900" id="v-tot-op"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Monto Gravado</p>
+                    <p class="text-lg font-black text-slate-700" id="v-tot-grav"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Monto Exento</p>
+                    <p class="text-lg font-black text-slate-700" id="v-tot-exe"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase text-red-500">Monto Retenido</p>
+                    <p class="text-lg font-black text-red-600" id="v-tot-ret"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Complementos Dinámica -->
+        <div id="v-complementos-container"></div>
+
+        <!-- Impuestos Retenidos Detalle -->
+        <div class="mb-10 overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 text-slate-500 uppercase text-[10px] font-black tracking-widest">
+                    <tr>
+                        <th class="p-4">Impuesto</th>
+                        <th class="p-4 text-center">Importe base</th>
+                        <th class="p-4 text-right">Importe Retenido</th>
+                    </tr>
+                </thead>
+                <tbody id="v-ret-body" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+
+        <!-- Pie -->
+        <div class="pt-10 border-t-2 border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Folio Fiscal (UUID)</p>
+            <p class="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 break-all" id="v-uuid"></p>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const preview = document.getElementById('invoicePreview');
+
+        const mesesMap = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const cufinMap = {
+    "01": "Proviene de CUFIN",
+    "02": "No proviene de CUFIN",
+    "03": "Reembolso o reducción de capital",
+    "04": "Liquidación de la persona moral",
+    "05": "CUFINRE",
+    "06": "Proviene de CUFIN al 31 de diciembre 2013"
+};
+
+        // Mapeo detallado solicitado
+        const catalogoPagos = {
+            "01": { desc: "Pago definitivo IVA", impDefault: "002" },
+            "02": { desc: "Pago definitivo IEPS", impDefault: "003" },
+            "03": { desc: "Pago definitivo ISR", impDefault: "001" },
+            "04": { desc: "Pago provisional ISR", impDefault: "001" }
+        };
+
+        const impMap = { "01": "ISR", "02": "IVA", "03": "IEPS" };
+
+
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = (e) => e.target.files[0] && processFile(e.target.files[0]);
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+        dropZone.ondrop = (e) => { e.preventDefault(); processFile(e.dataTransfer.files[0]); };
+        document.getElementById('btnPrint').onclick = () => window.print();
+
+        function f(n) { return parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function getAt(el, ...atts) { for(let a of atts) { let v = el?.getAttribute(a); if(v) return v; } return ''; }
+        function findNodes(parent, name) { return Array.from(parent.querySelectorAll('*')).filter(node => node.nodeName.toLowerCase().split(':').pop() === name.toLowerCase()); }
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const xml = new DOMParser().parseFromString(e.target.result, "text/xml");
+                renderRetenciones(xml);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderRetenciones(xml) {
+            const ret = findNodes(xml, "Retenciones")[0];
+            if (!ret) { alert("Este no parece ser un XML de Retenciones."); return; }
+
+            const emi = findNodes(xml, "Emisor")[0];
+            const rec = findNodes(xml, "Receptor")[0];
+            const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
+            const periodo = findNodes(xml, "Periodo")[0];
+            const totales = findNodes(xml, "Totales")[0];
+
+            // Emisor y Receptor
+            document.getElementById('v-emi-nom').textContent = getAt(emi, "NomDenRazSocE");
+            document.getElementById('v-emi-rfc').textContent = getAt(emi, "RfcE");
+            document.getElementById('v-emi-regimen').textContent = `Régimen: ${getAt(emi, "RegimenFiscalE") || '---'}`;
+            
+            const recNac = findNodes(rec, "Nacional")[0];
+            const recExt = findNodes(rec, "Extranjero")[0];
+            const receptorActivo = recNac || recExt;
+            document.getElementById('v-rec-nom').textContent = getAt(receptorActivo, "NomDenRazSocR") || "Público en General";
+            document.getElementById('v-rec-rfc').textContent = getAt(receptorActivo, "RfcR") || getAt(receptorActivo, "NumRegIdTribR") || "---";
+
+            // Folio y Periodo
+            document.getElementById('v-folio').textContent = `Folio: ${getAt(ret, "FolioInt") || 'S/F'}`;
+            document.getElementById('v-fecha').textContent = getAt(ret, "FechaExp");
+            document.getElementById('v-uuid').textContent = getAt(tfd, "UUID") || "PENDIENTE";
+            document.getElementById('v-ejercicio').textContent = getAt(periodo, "Ejercicio");
+            const mIni = parseInt(getAt(periodo, "MesIni"));
+            const mFin = parseInt(getAt(periodo, "MesFin"));
+            document.getElementById('v-meses').textContent = `${mesesMap[mIni-1]} a ${mesesMap[mFin-1]}`;
+
+            // Totales Base
+            document.getElementById('v-tot-op').textContent = `$${f(getAt(totales, "MontoTotOperacion"))}`;
+            document.getElementById('v-tot-grav').textContent = `$${f(getAt(totales, "MontoTotGrav"))}`;
+            document.getElementById('v-tot-exe').textContent = `$${f(getAt(totales, "MontoTotExent"))}`;
+            document.getElementById('v-tot-ret').textContent = `$${f(getAt(totales, "MontoTotRet"))}`;
+
+
+            // Lógica de tabla mejorada con nomenclatura solicitada
+            const detRets = findNodes(totales, "ImpRetenidos");
+            document.getElementById('v-ret-body').innerHTML = detRets.map(dr => {
+                const codPago = getAt(dr, "TipoPagoRet");
+                const codImp = getAt(dr, "ImpuestoRet");
+                const codprovcuf = getAt(dr,"CveTipDivOUtil");
+                
+                let descFinal = catalogoPagos[codPago] ? catalogoPagos[codPago].desc : `Pago Tipo ${codPago}`;
+                let impLabel = impMap[codImp] || codImp;
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4">
+                            <div class="flex flex-col">
+                                <span class="font-black text-slate-800 text-sm">${impLabel} — ${descFinal}</span>
+                                <span class="text-[9px] text-slate-400 font-mono uppercase">Claves: Imp ${codImp} | Pago ${codPago}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center font-black text-black-600 text-lg">$${f(getAt(dr, "BaseRet"))}</td>
+                        <td class="p-4 text-right font-black text-red-600 text-lg">$${f(getAt(dr, "MontoRet"))}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const compContainer = document.getElementById('v-complementos-container');
+            compContainer.innerHTML = '';
+
+            const int = findNodes(xml, "Intereses")[0];
+            if(int) addComp(compContainer, "Intereses", [
+                {l: "Int. Nominal", v: `$${f(getAt(int, "MontIntNominal"))}`},
+                {l: "Int. Real", v: `$${f(getAt(int, "MontIntReal"))}`},
+                {l: "Pérdida", v: `$${f(getAt(int, "Perdida"))}`, c: 'text-red-600'},
+                {l: "Sist. Financiero", v: getAt(int, "SistFinanciero")}
+            ]);
+
+            const intHip = findNodes(xml, "Intereseshipotecarios")[0];
+            if(intHip) addComp(compContainer, "Intereses Hipotecarios", [
+                {l: "Saldo Insoluto", v: `$${f(getAt(intHip, "SaldoInsoluto"))}`},
+                {l: "Prop. Deducible", v: `${getAt(intHip, "PropDeducDelCredit")}%`},
+                {l: "Int. Nominales Dev.", v: `$${f(getAt(intHip, "MontTotIntNominalesDev"))}`},
+                {l: "Crédito Inst. Fin.", v: getAt(intHip, "CreditoDeInstFinanc")}
+            ]);
+
+            const div = findNodes(xml, "Dividendos")[0];
+            if(div) {
+                const detDiv = findNodes(div, "DividOUtil")[0];
+
+                // Obtenemos la clave y buscamos su descripción en el diccionario
+    const cveCufin = getAt(detDiv, "CveTipDivOUtil");
+    const descCufin = cufinMap[cveCufin] || `Clave ${cveCufin}`;
+
+
+                addComp(compContainer, "Dividendos / Utilidades", [
+                    {l: "Tipo Sociedad", v: getAt(detDiv, "TipoSocDistrDiv")},
+                    {l: "Div. Acum. Extranjero", v: `$${f(getAt(detDiv, "MontDivAcumExt"))}`},
+                    {l: "Ret. Extranjero", v: `$${f(getAt(detDiv, "MontRetExtDivExt"))}`, c: 'text-red-500'},
+                    {l: "ISR Acred. Nacional", v: `$${f(getAt(detDiv, "MontISRAcredNal"))}`},
+                    {l: "Origen de Utilidad", v: descCufin},
+                ]);
+            }
+
+            const acc = findNodes(xml, "EnajenaciondeAcciones")[0];
+            if(acc) addComp(compContainer, "Enajenación de Acciones", [
+                {l: "Contrato Intermediación", v: getAt(acc, "ContratoIntermediacion")},
+                {l: "Ganancia", v: `$${f(getAt(acc, "Ganancia"))}`, c: 'text-green-600'},
+                {l: "Pérdida", v: `$${f(getAt(acc, "Perdida"))}`, c: 'text-red-600'}
+            ]);
+
+            const der = findNodes(xml, "Operacionesconderivados")[0];
+            if(der) addComp(compContainer, "Operaciones con Derivados", [
+                {l: "Ganancia Acumulada", v: `$${f(getAt(der, "MontGanAcum"))}`, c: 'text-green-600'},
+                {l: "Pérdida Deducible", v: `$${f(getAt(der, "MontPerdDed"))}`, c: 'text-red-600'}
+            ]);
+
+            preview.classList.remove('hidden');
+        }
+
+        function addComp(container, title, items) {
+            const div = document.createElement('div');
+            div.className = 'complemento-card';
+            div.innerHTML = `
+                <h4 class="text-[11px] font-black text-blue-700 uppercase tracking-widest mb-4 border-b border-blue-100 pb-2">${title}</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    ${items.map(i => `
+                        <div>
+                            <p class="text-[9px] text-blue-400 font-bold uppercase">${i.l}</p>
+                            <p class="text-sm font-black ${i.c || 'text-blue-900'}">${i.v}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    </script>
+</body>
+</html>
