@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Layout Aspel COI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 font-sans text-slate-200 h-screen overflow-hidden flex flex-col">
+
+    <header class="py-4 bg-slate-800 border-b border-slate-700 shadow-md flex-shrink-0">
+        <div class="container mx-auto px-6 max-w-6xl flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Check-In de Pólizas (Aspel COI)</h1>
+                <p class="text-slate-400 text-sm">Auditoría preventiva de Layouts de Excel antes de la carga masiva</p>
+            </div>
+            <span class="text-xs bg-sky-500/20 text-sky-400 px-3 py-1 rounded-full font-semibold tracking-wider">PRE-CARGA</span>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 max-w-6xl flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 h-[calc(100vh-5rem)]">
+        
+        <div class="lg:col-span-1 flex flex-col h-full space-y-4 overflow-y-auto pr-2">
+            <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 flex flex-col h-fit flex-shrink-0">
+                <h2 class="text-lg font-semibold mb-4 text-sky-400">
+                    <i class="fa-solid fa-file-excel mr-2"></i>Sube tu Layout de Excel
+                </h2>
+                
+                <input type="file" id="archivoExcel" accept=".xlsx, .xls" class="hidden" onchange="procesarLayout(this)">
+                
+                <label for="archivoExcel" class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-lg p-8 hover:border-sky-500 hover:bg-slate-700 transition w-full h-64">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl mb-4 text-slate-400"></i>
+                    <span class="text-white font-semibold text-center text-sm">Haz clic o arrastra tu archivo</span>
+                    <span class="text-slate-400 text-xs mt-2">Formatos: .xlsx, .xls</span>
+                </label>
+                
+                <div class="mt-4 p-3 bg-slate-700/50 rounded-lg text-xs text-slate-400">
+                    <i class="fa-solid fa-circle-info text-sky-400 mr-2"></i> El escáner detectará descuadres y cuentas faltantes antes de subirlas al COI.
+                </div>
+            </div>
+
+            <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 h-fit flex-shrink-0">
+                <h2 class="text-sm font-semibold mb-3 text-slate-300">
+                    <i class="fa-solid fa-filter mr-2 text-sky-400"></i>Filtrar Pólizas y Sumar Cuenta
+                </h2>
+                
+                <div class="relative w-full mb-4">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </span>
+                    <input type="text" id="buscadorPolizas" oninput="filtrarPolizas()" placeholder="Ej. 1105-001-000" 
+                           class="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 placeholder-slate-400">
+                </div>
+
+                <div id="resumenCuenta" class="hidden p-4 bg-slate-900/80 border border-slate-700 rounded-lg space-y-2">
+                    <h3 class="text-xs font-bold text-sky-400 tracking-wider uppercase">Saldo de Cuenta Buscada</h3>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Total Cargos:</span>
+                        <span id="txtCargosCuenta" class="font-mono text-white">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">Total Abonos:</span>
+                        <span id="txtAbonosCuenta" class="font-mono text-white">$0.00</span>
+                    </div>
+                    <div class="flex justify-between border-t border-slate-700 pt-2 text-sm font-bold">
+                        <span class="text-white">Saldo Neto:</span>
+                        <span id="txtSaldoCuenta" class="font-mono text-emerald-400">$0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 flex flex-col h-full bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
+            
+            <div class="p-4 border-b border-slate-700 flex-shrink-0 bg-slate-800/90 z-10 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-white">
+                    <i class="fa-solid fa-clipboard-check mr-2"></i>Informe de Auditoría
+                </h2>
+                <div id="contadorPolizas" class="text-xs text-slate-400"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="contenedorResultados">
+                
+                <div id="pantallaErrores" class="space-y-3 h-full flex flex-col justify-center items-center text-slate-500">
+                    <i class="fa-solid fa-folder-open text-5xl mb-3"></i>
+                    <p class="text-sm">Aún no has procesado ningún Layout de Excel.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 📥 Drag & Drop
+        const dropZone = document.querySelector('label[for="archivoExcel"]');
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('border-sky-500', 'bg-slate-700');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-sky-500', 'bg-slate-700');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                document.getElementById('archivoExcel').files = files;
+                procesarLayout({ files: files });
+            }
+        }, false);
+
+        let filasCrudasExcel = [];
+
+        function procesarLayout(input) {
+            const archivo = input.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+
+            lector.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const libro = XLSX.read(data, { type: 'array' });
+                const nombreHoja = libro.SheetNames[0];
+                const hoja = libro.Sheets[nombreHoja];
+                
+                filasCrudasExcel = XLSX.utils.sheet_to_json(hoja, { header: 1 });
+                auditarPolizas(filasCrudasExcel);
+            };
+
+            lector.readAsArrayBuffer(archivo);
+        }
+
+        function auditarPolizas(filas) {
+            const contenedor = document.getElementById('pantallaErrores');
+            contenedor.innerHTML = ''; 
+            contenedor.classList.remove('justify-center', 'items-center');
+
+            let polizaActual = null;
+            let sumaCargos = 0;
+            let sumaAbonos = 0;
+            let reportePolizas = [];
+            let acumuladoCuentas = {}; 
+
+            const patronEstructura = /^\d+-\d+-\d+-\d+$/;
+
+            for (let i = 0; i < filas.length; i++) {
+                const fila = filas[i];
+                if (!fila || fila.length === 0) continue;
+
+                const colA = String(fila[0] || '').trim(); 
+                const colB = String(fila[1] || '').trim(); 
+                const colC = String(fila[2] || '').trim(); 
+                const colD = String(fila[3] || '').trim(); 
+                const colE = String(fila[4] || '').trim(); 
+                const cargo = parseFloat(fila[5]) || 0;
+                const abono = parseFloat(fila[6]) || 0;
+
+                // Si la fila está completamente en ceros de dinero y no tiene texto en B, la ignoramos fuera de pólizas
+                if (cargo === 0 && abono === 0 && colB === "" && colA === "") {
+                    continue; 
+                }
+
+                // 🟢 1. INICIO DE PÓLIZA (CABECERA)
+                if (colA === "Dr" || colA === "Ig" || colA === "Tr") {
+                    polizaActual = {
+                        tipo: colA,
+                        numero: colB,
+                        descripcion: colC || 'Sin descripción',
+                        filaInicio: i + 1,
+                        errores: [],
+                        cargos: 0,
+                        abonos: 0,
+                        cuentasUsadas: []
+                    };
+                    sumaCargos = 0;
+                    sumaAbonos = 0;
+
+                    if (colB === "") polizaActual.errores.push(`Fila ${i + 1} (Cabecera): Falta número de póliza.`);
+                    if (colC === "") polizaActual.errores.push(`Fila ${i + 1} (Cabecera): Falta concepto de póliza.`);
+                }
+
+                // 🔴 2. CUERPO DE LA PÓLIZA (ASIENTOS)
+                if (polizaActual) {
+                    sumaCargos += cargo;
+                    sumaAbonos += abono;
+
+                    // Validar renglones de cuentas contables (donde no se repite el Tipo Dr/Ig/Tr)
+                    if (colB !== "FIN_PARTIDAS" && colA === "") {
+                        
+                        if (colB !== "" && !polizaActual.cuentasUsadas.includes(colB)) {
+                            polizaActual.cuentasUsadas.push(colB);
+                        }
+
+                        if (cargo > 0 || abono > 0) {
+                            if (!acumuladoCuentas[colB]) {
+                                acumuladoCuentas[colB] = { cargos: 0, abonos: 0 };
+                            }
+                            acumuladoCuentas[colB].cargos += cargo;
+                            acumuladoCuentas[colB].abonos += abono;
+                        }
+
+// 🔥 REGLA HORIZONTAL CORREGIDA: 
+                        // Validamos si la celda está vacía de verdad (sin texto y sin números)
+
+                        const estaVacioB = (colB === "" || colB === null || colB === undefined);
+                        
+                        // Para la Columna C y E, si el Excel manda un número 0, la fila[x] no estará vacía. 
+                        // Verificamos si la celda original del Excel no tiene absolutamente nada.
+                        const estaVacioC = (fila[2] === "" || fila[2] === null || fila[2] === undefined);
+                        const estaVacioE = (fila[4] === "" || fila[4] === null || fila[4] === undefined);
+
+                        if (estaVacioB) {
+                            polizaActual.errores.push(`Fila ${i + 1}: Falta la Cuenta Contable (Columna B).`);
+                        }
+                        
+                        if (estaVacioC) {
+                            polizaActual.errores.push(`Fila ${i + 1}: Falta el '0' o dato en la Columna C.`);
+                        }
+                        
+                        if (estaVacioE) {
+                            polizaActual.errores.push(`Fila ${i + 1}: Falta el '1' o dato en la Columna E.`);
+                        }
+
+
+
+                    }
+                }
+
+                // 🏁 3. FIN DE LA PÓLIZA
+                if (colB === "FIN_PARTIDAS" && polizaActual) {
+                    polizaActual.cargos = sumaCargos;
+                    polizaActual.abonos = sumaAbonos;
+
+                    const diferencia = Math.abs(sumaCargos - sumaAbonos);
+                    if (diferencia > 0.01) {
+                        polizaActual.errores.push(`Descuadre por $${diferencia.toFixed(2)} MXN.`);
+                    }
+
+                    reportePolizas.push(polizaActual);
+                    polizaActual = null; 
+                }
+            }
+
+            // --- 🧮 AGRUPADOR INTELIGENTE POR NIVEL (***) ---
+            let acumuladoCuentasAgrupadas = {};
+
+            Object.keys(acumuladoCuentas).forEach(cuentaOriginal => {
+                let cargos = acumuladoCuentas[cuentaOriginal].cargos;
+                let abonos = acumuladoCuentas[cuentaOriginal].abonos;
+
+                let partes = cuentaOriginal.split('-'); 
+                let cuentaAgrupada = cuentaOriginal;
+
+                if (partes.length >= 3) {
+                    cuentaAgrupada = `${partes[0]}-${partes[1]}-***-${partes[3] || '000'}`;
+                }
+
+                if (!acumuladoCuentasAgrupadas[cuentaAgrupada]) {
+                    acumuladoCuentasAgrupadas[cuentaAgrupada] = { cargos: 0, abonos: 0 };
+                }
+                acumuladoCuentasAgrupadas[cuentaAgrupada].cargos += cargos;
+                acumuladoCuentasAgrupadas[cuentaAgrupada].abonos += abonos;
+            });
+
+            let cuentasOrdenadas = Object.keys(acumuladoCuentasAgrupadas).map(cuenta => {
+                return {
+                    cuenta: cuenta,
+                    cargos: acumuladoCuentasAgrupadas[cuenta].cargos,
+                    abonos: acumuladoCuentasAgrupadas[cuenta].abonos
+                };
+            });
+
+            cuentasOrdenadas.sort((a, b) => {
+                return a.cuenta.localeCompare(b.cuenta, undefined, { numeric: true, sensitivity: 'base' });
+            });
+
+            const formatearMoneda = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+
+            let htmlBalanza = `
+                <div class="bg-slate-700/50 p-5 rounded-xl border border-slate-600 mb-6 flex-shrink-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-md font-bold text-sky-400 flex items-center gap-2">
+                            <i class="fa-solid fa-scale-unbalanced-shade"></i> Reporte Global por Subcuenta
+                        </h3>
+                        <span class="text-xs bg-slate-600 text-slate-300 px-2 py-1 rounded">Jerarquía por Nivel 2</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-72 overflow-y-auto border border-slate-600 rounded-lg">
+                        <table class="w-full text-xs text-left text-slate-300 border-collapse">
+                            <thead class="sticky top-0 bg-slate-800 text-slate-400 border-b border-slate-600">
+                                <tr>
+                                    <th class="p-3">Cuenta Agrupadora</th>
+                                    <th class="p-3 text-right">Cargos</th>
+                                    <th class="p-3 text-right">Abonos</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700 bg-slate-800/50">
+            `;
+
+            cuentasOrdenadas.forEach(c => {
+                htmlBalanza += `
+                    <tr class="hover:bg-slate-700/50 transition">
+                        <td class="p-2 font-mono font-bold text-white">${c.cuenta}</td>
+                        <td class="p-2 text-right text-emerald-400 font-mono">${formatearMoneda(c.cargos)}</td>
+                        <td class="p-2 text-right text-rose-400 font-mono">${formatearMoneda(c.abonos)}</td>
+                    </tr>
+                `;
+            });
+
+            htmlBalanza += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr class="border-slate-700 mb-6">
+                <h3 class="text-sm font-bold text-slate-400 mb-4"><i class="fa-solid fa-list-check mr-2"></i>Desglose Individual de Pólizas</h3>
+            `;
+
+            contenedor.innerHTML = htmlBalanza;
+
+            document.getElementById('contadorPolizas').innerText = `Total de pólizas auditadas: ${reportePolizas.length}`;
+
+            if (reportePolizas.length === 0) {
+                contenedor.innerHTML += `<div class="p-4 bg-slate-700 text-amber-400 rounded">No se encontraron pólizas estructuradas con FIN_PARTIDAS.</div>`;
+                return;
+            }
+
+            reportePolizas.forEach(p => {
+                const tieneErrores = p.errores.length > 0;
+                const bgClase = tieneErrores ? 'bg-rose-900/40 border-rose-700/50' : 'bg-emerald-900/30 border-emerald-700/50';
+                const textClase = tieneErrores ? 'text-rose-400' : 'text-emerald-400';
+                const icono = tieneErrores ? 'fa-triangle-exclamation' : 'fa-circle-check';
+
+                let listaErroresHTML = '';
+                p.errores.forEach(err => {
+                    listaErroresHTML += `<li class="text-xs text-rose-200 mt-1"><i class="fa-solid fa-caret-right mr-1"></i> ${err}</li>`;
+                });
+
+                const stringCuentas = p.cuentasUsadas.join(' ');
+
+                contenedor.innerHTML += `
+                    <div class="tarjeta-poliza p-4 border rounded-lg ${bgClase} flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition hover:bg-slate-700/30 mb-3" 
+                         data-buscar="${p.tipo} ${p.numero} ${p.descripcion} ${stringCuentas}"> 
+                        <div>
+                            <span class="font-bold ${textClase} text-sm flex items-center gap-2"><i class="fa-solid ${icono}"></i> Póliza ${p.tipo} - No. ${p.numero}</span>
+                            <p class="text-xs text-slate-300 mt-1">${p.descripcion}</p>
+                            <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full mt-2 inline-block">${p.cuentasUsadas.length} cuentas afectadas</span>
+                            <ul class="mt-1">${listaErroresHTML}</ul>
+                        </div>
+                        <div class="text-right text-xs text-slate-400 border-l border-slate-700/50 pl-4 h-full flex flex-col justify-center">
+                            <p>Cargos: <span class="text-white font-mono">$${p.cargos.toFixed(2)}</span></p>
+                            <p>Abonos: <span class="text-white font-mono">$${p.abonos.toFixed(2)}</span></p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filtrarPolizas() {
+            const textoBusqueda = document.getElementById('buscadorPolizas').value.toLowerCase().trim();
+            const contenedor = document.getElementById('pantallaErrores');
+            const tarjetas = contenedor.getElementsByClassName('tarjeta-poliza');
+
+            const widgetResumen = document.getElementById('resumenCuenta');
+            const txtCargos = document.getElementById('txtCargosCuenta');
+            const txtAbonos = document.getElementById('txtAbonosCuenta');
+            const txtSaldo = document.getElementById('txtSaldoCuenta');
+
+            let visibles = 0;
+            let sumaCargosCuenta = 0;
+            let sumaAbonosCuenta = 0;
+
+            for (let i = 0; i < tarjetas.length; i++) {
+                const tarjeta = tarjetas[i];
+                const contenidoDeBusqueda = tarjeta.getAttribute('data-buscar').toLowerCase();
+
+                if (contenidoDeBusqueda.includes(textoBusqueda)) {
+                    tarjeta.classList.remove('hidden');
+                    visibles++;
+                } else {
+                    tarjeta.classList.add('hidden');
+                }
+            }
+
+            if (textoBusqueda.length >= 4) { 
+                for (let i = 0; i < filasCrudasExcel.length; i++) {
+                    const fila = filasCrudasExcel[i];
+                    if (!fila) continue;
+
+                    const cuentaFila = String(fila[1] || '').toLowerCase().trim(); 
+                    const cargo = parseFloat(fila[5]) || 0; 
+                    const abono = parseFloat(fila[6]) || 0; 
+
+                    if (cuentaFila.includes(textoBusqueda) && cuentaFila !== "fin_partidas") {
+                        sumaCargosCuenta += cargo;
+                        sumaAbonosCuenta += abono;
+                    }
+                }
+
+                const saldoNeto = sumaCargosCuenta - sumaAbonosCuenta;
+                const formatearMoneda = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+
+                txtCargos.innerText = formatearMoneda(sumaCargosCuenta);
+                txtAbonos.innerText = formatearMoneda(sumaAbonosCuenta);
+                txtSaldo.innerText = formatearMoneda(saldoNeto);
+
+                txtSaldo.className = saldoNeto >= 0 ? "font-mono text-emerald-400" : "font-mono text-rose-400";
+                widgetResumen.classList.remove('hidden');
+            } else {
+                widgetResumen.classList.add('hidden'); 
+            }
+
+            const contador = document.getElementById('contadorPolizas');
+            contador.innerText = textoBusqueda === "" ? `Mostrando todas las pólizas.` : `Encontradas: ${visibles} pólizas.`;
+        }
+    </script>
+</body>
+</html>
