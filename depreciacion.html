@@ -354,8 +354,9 @@ fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
 let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq); 
 let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
 
-// 2. NUEVA REGLA: Para la mitad del periodo se usa el MES DIRECTO (Sin restar)
-let inpcMitadPublicado = baseINPC[fechaMitad]; // 👈 Aquí quitamos el "obtenerMesAnterior"
+// NUEVA LÍNEA: Usamos la nueva función para NO restar un mes
+let mesDirectoMitadObj = formatearMesDirecto(fechaMitad); 
+let inpcMitadPublicado = baseINPC[mesDirectoMitadObj]; // 👈 Jala el INPC del mes directo (Junio)
 
 // 3. Todo lo demás sigue su curso normal
 let factorAct = inpcMitadPublicado / inpcAdqPublicado;
