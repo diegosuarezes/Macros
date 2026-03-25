@@ -9,53 +9,56 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 font-sans text-slate-200 h-screen overflow-hidden flex flex-col">
+<body class="bg-slate-50 font-sans text-slate-800 h-screen overflow-hidden flex flex-col">
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
 
-    <header class="py-4 bg-slate-800 border-b border-slate-700 shadow-md flex-shrink-0">
+    <header class="py-4 bg-white border-b border-slate-200 shadow-sm flex-shrink-0">
         <div class="container mx-auto px-4 max-w-7xl flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf text-indigo-500"></i> Vaciado de Impuestos Federales (PDF)
+                <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-indigo-600"></i> Vaciado de Impuestos Federales (PDF)
                 </h1>
-                <p class="text-slate-400 text-xs">Pruebas locales del extractor de impuestos.</p>
+                <p class="text-slate-500 text-xs">Pruebas locales del extractor de impuestos.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">LECTOR LOCAL</span>
             </div>
         </div>
     </header>
 
     <div class="container mx-auto px-4 max-w-7xl flex-1 flex flex-col py-6 h-[calc(100vh-5rem)] overflow-hidden">
         
-        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 mb-6 flex-shrink-0 shadow-lg">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 mb-6 flex-shrink-0 shadow-sm">
             <div class="flex flex-col md:flex-row items-center gap-4">
                 
-                <div id="dropZone" class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-lg p-6 hover:border-indigo-500 hover:bg-slate-700/50 transition w-full md:w-1/3 h-32" onclick="document.getElementById('inputPDFs').click()">
-                    <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-indigo-400"></i>
-                    <span class="text-white font-semibold text-sm">Arrastra o haz clic aquí</span>
-                    <span class="text-slate-400 text-xs mt-1">Sube tus PDFs del SAT</span>
+                <div id="dropZone" class="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-lg p-6 hover:border-indigo-500 hover:bg-indigo-50/50 transition w-full md:w-1/3 h-32" onclick="document.getElementById('inputPDFs').click()">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-indigo-500"></i>
+                    <span class="text-slate-800 font-semibold text-sm">Arrastra o haz clic aquí</span>
+                    <span class="text-slate-500 text-xs mt-1">Sube tus PDFs del SAT</span>
                     <input type="file" id="inputPDFs" accept=".pdf" multiple class="hidden" onchange="manejarArchivos(this.files)">
                 </div>
 
                 <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600 flex flex-col justify-center items-center h-32">
-                        <span class="text-xl font-bold text-white" id="statPdfCount">0</span>
-                        <span class="text-xs text-slate-400 mt-1">PDFs Leídos</span>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-center items-center h-32">
+                        <span class="text-xl font-bold text-slate-800" id="statPdfCount">0</span>
+                        <span class="text-xs text-slate-500 mt-1">PDFs Leídos</span>
                     </div>
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600 flex flex-col justify-center items-center h-32">
-                        <span class="text-xl font-bold text-emerald-400" id="statImpuestosCount">0</span>
-                        <span class="text-xs text-slate-400 mt-1">Renglones Generados</span>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-center items-center h-32">
+                        <span class="text-xl font-bold text-emerald-600" id="statImpuestosCount">0</span>
+                        <span class="text-xs text-slate-500 mt-1">Renglones Generados</span>
                     </div>
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600 flex flex-col justify-center items-center h-32">
-                        <span class="text-xl font-bold text-rose-400" id="statErrorCount">0</span>
-                        <span class="text-xs text-slate-400 mt-1">Errores de lectura</span>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-center items-center h-32">
+                        <span class="text-xl font-bold text-rose-600" id="statErrorCount">0</span>
+                        <span class="text-xs text-slate-500 mt-1">Errores de lectura</span>
                     </div>
                     <div class="flex flex-col justify-center items-center h-32">
-                        <button onclick="descargarExcel()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition tracking-wide text-sm mb-2">
+                        <button onclick="descargarExcel()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm flex items-center justify-center gap-2 transition tracking-wide text-sm mb-2">
                             <i class="fa-solid fa-file-excel text-lg"></i> Excel
                         </button>
-                        <button onclick="limpiarTodo()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition text-xs">
+                        <button onclick="limpiarTodo()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition text-xs">
                             <i class="fa-solid fa-trash-can"></i> Limpiar
                         </button>
                     </div>
@@ -64,336 +67,24 @@
             </div>
         </div>
 
-        <div id="debugLog" class="hidden bg-rose-900/50 border border-rose-700 p-4 rounded-lg mb-4 text-xs font-mono text-rose-200 max-h-32 overflow-y-auto">
+        <div id="debugLog" class="hidden bg-rose-50 border border-rose-200 p-4 rounded-lg mb-4 text-xs font-mono text-rose-700 max-h-32 overflow-y-auto">
             <strong>🚫 Logs del Sistema (Errores):</strong><br>
         </div>
 
-        <div class="flex-1 bg-slate-800 rounded-xl border border-slate-700 shadow-lg flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
-                <h2 class="text-md font-semibold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-indigo-400"></i> Tabla de Vaciado de Impuestos
+        <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+                <h2 class="text-md font-semibold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-500"></i> Tabla de Vaciado de Impuestos
                 </h2>
             </div>
 
             <div class="flex-1 overflow-auto">
-                <table class="w-full text-xs text-left text-slate-300 border-collapse min-w-[2200px]">
-                    <thead class="sticky top-0 bg-slate-800 text-slate-400 font-semibold border-b border-slate-700 z-10">
+                <table class="w-full text-xs text-left text-slate-700 border-collapse min-w-[2200px]">
+                    <thead class="sticky top-0 bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 z-10">
                         <tr>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">RFC</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">Razón Social</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">Ejerc.</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">Periodo</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">Tipo Decl.</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">Fecha Presentación</th>
-                            <th class="p-3 bg-slate-800 border-r border-slate-700 text-indigo-400">No. Operación SAT</th>
-
-                            <th class="p-3 bg-slate-750 text-emerald-400 border-l border-slate-700">Concepto de Impuesto</th>
-                            <th class="p-3 bg-slate-750 text-emerald-400 text-right">Impuesto Cargo</th>
-                            <th class="p-3 bg-slate-750 text-emerald-400 text-right">Actualización</th>
-                            <th class="p-3 bg-slate-750 text-emerald-400 text-right">Recargos</th>
-                            <th class="p-3 bg-slate-750 text-emerald-400 text-right">Compensación</th>
-                            <th class="p-3 bg-slate-750 text-emerald-400 text-right">Cant. a Pagar</th>
-
-                            <th class="p-3 bg-slate-800 border-l border-slate-700 text-sky-400">Línea de Captura</th>
-                            <th class="p-3 bg-slate-800 text-sky-400 text-right">Importe Total Pagado</th>
-                            <th class="p-3 bg-slate-800 text-sky-400">Fecha Pago Banco</th>
-                            <th class="p-3 bg-slate-800 text-sky-400">Banco</th>
-                            <th class="p-3 bg-slate-800 text-sky-400">Operación Banco</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaResultados" class="divide-y divide-slate-700 bg-slate-800/50"></tbody>
-                </table>
-                
-                <div id="pantallaVacia" class="flex flex-col items-center justify-center h-64 text-slate-500">
-                    <i class="fa-solid fa-folder-open text-5xl mb-3"></i>
-                    <p class="text-sm">Arrastra tus archivos o haz clic en el cuadro para probar.</p>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        let baseDatosImpuestos = [];
-        let conteoArchivos = 0;
-        let conteoErrores = 0;
-
-        function logError(mensaje) {
-            const log = document.getElementById('debugLog');
-            log.classList.remove('hidden');
-            log.innerHTML += `> ${mensaje}<br>`;
-            conteoErrores++;
-            document.getElementById('statErrorCount').innerText = conteoErrores;
-        }
-
-        // --- Drag & Drop ---
-        const dropZone = document.getElementById('dropZone');
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-indigo-500', 'bg-slate-700/50');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-indigo-500', 'bg-slate-700/50');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-indigo-500', 'bg-slate-700/50');
-            manejarArchivos(e.dataTransfer.files);
-        });
-
-        async function manejarArchivos(files) {
-            const pdfs = Array.from(files).filter(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
-            
-            if (pdfs.length === 0) {
-                logError("No se detectaron archivos PDF válidos.");
-                return;
-            }
-
-            conteoArchivos += pdfs.length;
-            document.getElementById('statPdfCount').innerText = conteoArchivos;
-
-            for (const file of pdfs) {
-                try {
-                    const textoCompleto = await extraerTextoPDF(file);
-                    procesarTextoFiscal(textoCompleto);
-                } catch (error) {
-                    logError(`Error leyendo el archivo ${file.name}: ${error.message}`);
-                }
-            }
-            renderizarTabla();
-        }
-
-        async function extraerTextoPDF(file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                let textoCompleto = "";
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const textoPagina = textContent.items.map(item => item.str).join(" ");
-                    textoCompleto += ` --- PAGINA ${i} --- \n ${textoPagina} \n`;
-                }
-                return textoCompleto;
-            } catch (err) {
-                throw new Error("No se pudo extraer el texto del PDF.");
-            }
-        }
-
-        // --- 🧠 Procesador Fiscal Inteligente ---
-        function procesarTextoFiscal(texto) {
-            try {
-                const textoLimpio = texto.replace(/\s+/g, ' ');
-
-                const rfcMatch = textoLimpio.match(/RFC:\s*([A-Z0-9]{12,13})/i);
-                const rfc = rfcMatch ? rfcMatch[1] : "N/A";
-
-                const razonMatch = textoLimpio.match(/Denominación o razón social:\s*([^Tipo\d]+)/i);
-                const razonSocial = razonMatch ? razonMatch[1].trim() : "N/A";
-
-                const ejercicioMatch = textoLimpio.match(/Ejercicio:\s*(\d{4})/i);
-                const ejercicio = ejercicioMatch ? ejercicioMatch[1] : "N/A";
-
-                const periodoMatch = textoLimpio.match(/Período de la declaración:\s*([A-Za-z]+)/i);
-                const periodo = periodoMatch ? periodoMatch[1] : "N/A";
-
-                // Reconocer declaraciones Complementarias
-                const tipoMatch = textoLimpio.match(/Tipo de declaración:\s*([A-Za-z]+)/i);
-                let tipoDecl = tipoMatch ? tipoMatch[1] : "Normal";
-                if (textoLimpio.includes("Complementaria")) {
-                    tipoDecl = "Complementaria";
-                }
-
-                const fechaPresMatch = textoLimpio.match(/Fecha y hora de presentación:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2})/i);
-                const fechaPresentacion = fechaPresMatch ? fechaPresMatch[1] : "N/A";
-
-                const operacionMatch = textoLimpio.match(/Número de operación:\s*(\d+)/i);
-                const numeroOperacion = operacionMatch ? operacionMatch[1] : "N/A";
-
-                const bancoMatch = textoLimpio.match(/Institución de crédito:\s*([^Línea]+)/i);
-                const banco = bancoMatch ? bancoMatch[1].trim() : "N/A";
-
-                const lineaMatch = textoLimpio.match(/Línea de Capture:\s*([\d\sA-Z]{18,25})/i) || textoLimpio.match(/Línea de\s*Captura:\s*([\d\sA-Z]{18,25})/i);
-                const lineaCaptura = lineaMatch ? lineaMatch[1].trim() : "N/A";
-
-                const fechaPagoMatch = textoLimpio.match(/Fecha del\s*pago:\s*(\d{2}\/\d{2}\/\d{4})/i);
-                const fechaPago = fechaPagoMatch ? fechaPagoMatch[1] : "N/A";
-
-                const opBancoMatch = textoLimpio.match(/No\. de\s*Operación:\s*(\d+)/i);
-                const opBanco = opBancoMatch ? opBancoMatch[1] : "N/A";
-
-                const importeTotalMatch = textoLimpio.match(/Importe total a pagar:\s*\$?\s*([0-9,.]+)/i) || textoLimpio.match(/Importe pagado:\s*\$?\s*([0-9,.]+)/i);
-                const importeTotal = importeTotalMatch ? parseMoney(importeTotalMatch[1]) : 0;
-
-                // --- ✂️ DIVISIÓN POR BLOQUES DE IMPUESTOS ---
-                const delimitadoresBusqueda = [
-                    "isr personas morales", 
-                    "impuesto al valor agregado", 
-                    "iva retenciones", 
-                    "isr retenciones por salarios",
-                    "isr retenciones por asimilados a salarios", 
-                    "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
-                    "isr por pagos por cuenta de terceros",
-                    "isr personas fisicas. actividad empresarial y profesional", // 🔥 Nuevo PF
-                    "impuesto al valor agregado. personas fisicas" // 🔥 Nuevo IVA PF
-                ];
-
-                const textoNormalizado = textoLimpio.toLowerCase()
-                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-                let bloquesIndices = [];
-
-                delimitadoresBusqueda.forEach(del => {
-                    let index = textoNormalizado.indexOf(del);
-                    if (index !== -1) {
-                        bloquesIndices.push({ tipoOriginal: del, index: index });
-                    }
-                });
-
-                bloquesIndices.sort((a, b) => a.index - b.index);
-
-                if (bloquesIndices.length === 0) {
-                    insertarRegistro(rfc, razonSocial, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, "No reconocido automáticamente", 0, 0, 0, 0, 0, lineaCaptura, importeTotal, fechaPago, banco, opBanco);
-                    return;
-                }
-
-                for (let i = 0; i < bloquesIndices.length; i++) {
-                    let inicio = bloquesIndices[i].index;
-                    let fin = (i + 1 < bloquesIndices.length) ? bloquesIndices[i + 1].index : textoNormalizado.length;
-                    let fragmento = textoLimpio.substring(inicio, fin);
-
-                    let cargoMatch = fragmento.match(/A cargo:\s*([0-9,]+)/i) || fragmento.match(/Impuesto a cargo:\s*([0-9,]+)/i) || fragmento.match(/Cantidad a cargo:\s*([0-9,]+)/i);
-                    let cargo = cargoMatch ? parseMoney(cargoMatch[1]) : 0;
-
-                    let actMatch = fragmento.match(/Parte actualizada:\s*([0-9,]+)/i);
-                    let actualizacion = actMatch ? parseMoney(actMatch[1]) : 0;
-
-                    let recMatch = fragmento.match(/Recargos:\s*([0-9,]+)/i);
-                    let recargos = recMatch ? parseMoney(recMatch[1]) : 0;
-
-                    let compMatch = fragmento.match(/Compensaciones:\s*([0-9,]+)/i) || fragmento.match(/Saldo a aplicar\s*([0-9,]+)/i);
-                    let compensacion = compMatch ? parseMoney(compMatch[1]) : 0;
-
-                    let pagoMatch = fragmento.match(/Cantidad a pagar:\s*([0-9,]+)/i);
-                    let cantPagar = pagoMatch ? parseMoney(pagoMatch[1]) : 0;
-
-                    if (cargo === 0 && cantPagar === 0 && compensacion === 0) continue;
-
-                    let totalFila = importeTotal > 0 ? importeTotal : cantPagar;
-                    const nombreFormateado = bloquesIndices[i].tipoOriginal.toUpperCase();
-
-                    insertarRegistro(rfc, razonSocial, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
-                }
-            } catch (err) {
-                logError(`Error procesando los datos internos del PDF.`);
-            }
-        }
-
-        function parseMoney(text) {
-            if (!text) return 0;
-            return parseFloat(text.replace(/[^0-9.-]+/g, '')) || 0;
-        }
-
-        function insertarRegistro(rfc, rs, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
-            baseDatosImpuestos.push({
-                rfc, rs, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
-            });
-        }
-
-        function renderizarTabla() {
-            const tbody = document.getElementById('tablaResultados');
-            const placeholder = document.getElementById('pantallaVacia');
-
-            tbody.innerHTML = '';
-
-            if (baseDatosImpuestos.length === 0) {
-                placeholder.classList.remove('hidden');
-                return;
-            }
-
-            placeholder.classList.add('hidden');
-            document.getElementById('statImpuestosCount').innerText = baseDatosImpuestos.length;
-
-            const format = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
-
-            baseDatosImpuestos.forEach((d) => {
-                const filaClase = d.pagar === 0 && d.cargo > 0 ? "bg-indigo-900/20" : "hover:bg-slate-700/50 transition";
-                
-                tbody.innerHTML += `
-                    <tr class="${filaClase}">
-                        <td class="p-3 font-mono">${d.rfc}</td>
-                        <td class="p-3 truncate max-w-xs">${d.rs}</td>
-                        <td class="p-3">${d.ej}</td>
-                        <td class="p-3">${d.per}</td>
-                        <td class="p-3">${d.tip}</td>
-                        <td class="p-3">${d.fPres}</td>
-                        <td class="p-3 font-mono">${d.op}</td>
-
-                        <td class="p-3 font-semibold text-white border-l border-slate-700">${d.impNombre}</td>
-                        <td class="p-3 text-right font-mono">${format(d.cargo)}</td>
-                        <td class="p-3 text-right font-mono">${format(d.act)}</td>
-                        <td class="p-3 text-right font-mono">${format(d.rec)}</td>
-                        <td class="p-3 text-right font-mono ${d.comp > 0 ? 'text-rose-400' : ''}">${d.comp > 0 ? '-' + format(d.comp) : '$0.00'}</td>
-                        <td class="p-3 text-right font-mono ${d.pagar > 0 ? 'text-emerald-400' : 'text-slate-400'}">${format(d.pagar)}</td>
-
-                        <td class="p-3 font-mono border-l border-slate-700">${d.lc}</td>
-                        <td class="p-3 text-right font-mono ${d.impTotal > 0 ? 'text-sky-400' : ''}">${format(d.impTotal)}</td>
-                        <td class="p-3">${d.fPago}</td>
-                        <td class="p-3">${d.ban}</td>
-                        <td class="p-3 font-mono">${d.opBan}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function limpiarTodo() {
-            baseDatosImpuestos = [];
-            conteoArchivos = 0;
-            conteoErrores = 0;
-            document.getElementById('statPdfCount').innerText = 0;
-            document.getElementById('statImpuestosCount').innerText = 0;
-            document.getElementById('statErrorCount').innerText = 0;
-            document.getElementById('debugLog').classList.add('hidden');
-            document.getElementById('debugLog').innerHTML = "<strong>🚫 Logs del Sistema (Errores):</strong><br>";
-            renderizarTabla();
-        }
-
-        function descargarExcel() {
-            if (baseDatosImpuestos.length === 0) {
-                alert("No hay datos para exportar.");
-                return;
-            }
-
-            const excelMapeado = baseDatosImpuestos.map(d => ({
-                "RFC": d.rfc,
-                "Razón Social": d.rs,
-                "Ejercicio": d.ej,
-                "Periodo": d.per,
-                "Tipo Declaración": d.tip,
-                "Fecha Presentación": d.fPres,
-                "No. Operación SAT": d.op,
-                "Concepto Impuesto": d.impNombre,
-                "Impuesto Cargo": d.cargo,
-                "Actualización": d.act,
-                "Recargos": d.rec,
-                "Compensación": d.comp > 0 ? -d.comp : 0,
-                "Cant. a Pagar": d.pagar,
-                "Línea de Captura": d.lc,
-                "Importe Total Pagado": d.impTotal,
-                "Fecha Pago Banco": d.fPago,
-                "Banco": d.ban,
-                "Operación Banco": d.opBan
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(excelMapeado);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Impuestos");
-            XLSX.writeFile(wb, "Vaciado_SAT.xlsx");
-        }
-    </script>
-</body>
-</html>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">RFC</th>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Razón Social</th>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Ejerc.</th>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Periodo</th>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Tipo Decl.</th>
+                            <th class="p-3 bg-slate-100 border-r border-slate-200
