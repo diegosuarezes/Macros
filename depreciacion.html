@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Depreciacion</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-slate-900 font-sans text-slate-200">
@@ -55,9 +56,14 @@
                     <button onclick="calcularTodo()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-calculator"></i> Calcular Cierre Fiscal
                     </button>
-<button onclick="limpiarFormulario()" class="w-full mt-2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                <button onclick="limpiarFormulario()" class="w-full mt-2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
     <i class="fa-solid fa-trash-can"></i> Borrar Todo
 </button>
+
+                <button onclick="descargarExcelDepreciacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+    <i class="fa-solid fa-file-excel"></i> Descargar Reporte Excel
+</button>
+                    
                 </div>
             </div>
 
@@ -425,6 +431,57 @@ function limpiarFormulario() {
 }
         // Ejecutar cálculo al arrancar
         // window.onload = calcularTodo;
+
+        function descargarExcelDepreciacion() {
+    // 1. Capturar los datos actuales del formulario (Igual que en tu función calcular)
+    const moi = parseFloat(document.getElementById('moi').value) || 0;
+    const porcentaje = parseFloat(document.getElementById('porcentaje').value) || 0;
+    const fechaAdq = document.getElementById('fechaAdq').value;
+    
+    // Capturamos los resultados que ya calculó tu sistema en la pantalla
+    // (Asegúrate de que los IDs coincidan con los de tus <span> o <p> de resultados)
+    const factorAct = document.getElementById('resFactorAct').innerText; // El 1.0000 truncado
+    const dedContable = document.getElementById('resDedContable').innerText;
+    const dedFiscal = document.getElementById('resDedFiscal').innerText;
+
+    if (moi <= 0) {
+        alert("Primero realiza un cálculo para poder descargar el reporte.");
+        return;
+    }
+
+    // 2. Crear la matriz de datos para el Excel (Filas y Columnas)
+    const datosExcel = [
+        ["REPORTE DE DEDUCCIÓN DE INVERSIONES (FISCAL Y CONTABLE)"],
+        [], // Fila vacía
+        ["CONCEPTO", "VALOR"],
+        ["Monto Original de la Inversión (MOI)", moi],
+        ["% de Depreciación Anual", porcentaje + "%"],
+        ["Fecha de Adquisición", fechaAdq],
+        [],
+        ["RESUMEN DE RESULTADOS"],
+        ["Factor de Actualización (CFF Art 17-A)", factorAct],
+        ["Depreciación Contable del Ejercicio", dedContable],
+        ["Deducción Fiscal Actualizada del Ejercicio", dedFiscal],
+        [],
+        ["Reporte generado automáticamente por la plataforma de Diego Suárez."]
+    ];
+
+    // 3. Crear el libro de trabajo de Excel (Workbook)
+    const libro = XLSX.utils.book_new();
+    const hoja = XLSX.utils.aoa_to_sheet(datosExcel);
+
+    // Ajustar el ancho de la columna A y B para que no se vea amontonado
+    hoja['!cols'] = [{ wch: 45 }, { wch: 20 }];
+
+    XLSX.utils.book_append_sheet(libro, hoja, "Depreciación Fiscal");
+
+    // 4. Disparar la descarga del archivo en el navegador
+    XLSX.writeFile(libro, `Reporte_Depreciacion_${fechaAdq}.xlsx`);
+}
+
+
+
+        
     </script>
 
 </body>
