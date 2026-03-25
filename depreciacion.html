@@ -141,7 +141,7 @@
                                 <span id="valMesMitad" class="font-mono text-white">---</span>
                             </div>
                             <div class="flex justify-between p-2 bg-slate-700 rounded">
-                                <span>INPC Publicado de la 1era Mitad (Mes Anterior):</span>
+                                <span>INPC Publicado de la 1era Mitad (Oficial):</span>
                                 <span id="valInpcMitad" class="font-mono text-white">---</span>
                             </div>
                             <div class="flex justify-between p-2 bg-slate-700 rounded">
@@ -375,12 +375,17 @@ let dedEjercicioFinal = dedAnualFiscal * proporcionUso * factorAct;
 document.getElementById('resFactor').innerText = factorAct.toFixed(4);
 document.getElementById('resDeduccionFiscal').innerText = formateador.format(dedEjercicioFinal);
 
-document.getElementById('valInpcAdq').innerText = inpcAdqPublicado.toFixed(3) + " (DOF " + mesAnteriorAdqObj + ")";
-document.getElementById('valMesMitad').innerText = fechaMitad.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' }).toUpperCase();
-document.getElementById('valInpcMitad').innerText = inpcMitadPublicado.toFixed(3) + " (DOF " + mesAnteriorMitadObj + ")";
-document.getElementById('valMoiBase').innerText = formateador.format(moi);
-document.getElementById('valDedFinal').innerText = formateador.format(dedEjercicioFinal);        }
+// 📊 1. Pintamos los INPCs y las fechas en la memoria de cálculo
+document.getElementById('valInpcAdq').innerText = inpcAdqPublicado;
 
+// Usamos la NUEVA variable directa (Sin restar mes) que creamos con tus colegas
+document.getElementById('valMesMitad').innerText = mesDirectoMitadObj; 
+document.getElementById('valInpcMitad').innerText = inpcMitadPublicado;
+
+// 💵 2. Pintamos los montos de dinero formateados como Moneda (MXN)
+document.getElementById('valMoiBase').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moi);
+
+document.getElementById('valDedFinal').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(dedEjercicioFinal);
 // Para la Adquisición (Resta 1 mes)
 function obtenerMesAnterior(dateObj) {
     let temp = new Date(dateObj);
