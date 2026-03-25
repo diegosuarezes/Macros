@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Nómina Pro | LFT & IMSS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 font-sans text-slate-200">
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-white mb-2">💸 Simulador de Nómina Inteligente</h1>
+            <p class="text-slate-400">Cálculo de ISR, IMSS Obrero y Carga Social Patronal (LFT vigentes).</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Datos del Trabajador</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Sueldo Bruto Mensual (Pactado)</label>
+                        <input type="number" id="sueldoMensual" placeholder="Ej. 25000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+<div class="grid grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Premio Asistencia (Mensual)</label>
+        <input type="number" id="premioAsistencia" placeholder="Ej. 1000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Premio Puntualidad (Mensual)</label>
+        <input type="number" id="premioPuntualidad" placeholder="Ej. 1000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+    </div>
+</div>
+
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Periodicidad de Pago</label>
+                        <select id="periodicidad" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="mensual">Mensual (30.4 días)</option>
+                            <option value="quincenal">Quincenal (15 días)</option>
+                            <option value="semanal">Semanal (7 días)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Años de Antigüedad</label>
+                        <input type="number" id="antiguedad" value="1" min="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Prima de Riesgo de Trabajo %</label>
+                        <input type="number" id="riesgoTrabajo" value="0.522" step="0.00001" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <span class="text-xs text-slate-500">Clase I estándar: 0.522%</span>
+                    </div>
+
+                    <button onclick="calcularNomina()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Calcular Nómina
+                    </button>
+                    <button onclick="resetearCalculadora()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-trash-can"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
+                        <span class="text-sm text-slate-400">Sueldo Neto a Pagar</span>
+                        <h3 id="resNeto" class="text-2xl font-bold text-emerald-400 mt-1">---</h3>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
+                        <span class="text-sm text-slate-400">SBC / SDI (Diario)</span>
+                        <h3 id="resSdi" class="text-2xl font-bold text-sky-400 mt-1">---</h3>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
+                        <span class="text-sm text-slate-400">Costo Total Patrón</span>
+                        <h3 id="resCostoPatron" class="text-2xl font-bold text-purple-400 mt-1">---</h3>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+    <h2 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-receipt mr-2 text-sky-400"></i>Recibo del Trabajador (Retenciones)</h2>
+
+
+
+    <div class="space-y-2 text-sm">
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
+            <span>Sueldo Bruto del Periodo:</span>
+            <span id="outBrutoPeriodo" class="font-mono text-white">---</span>
+        </div>
+<div class="flex justify-between p-2 bg-slate-700 rounded">
+    <span class="text-emerald-400">(+) Premio Asistencia:</span>
+    <span id="outAsistencia" class="font-mono text-emerald-400">---</span>
+</div>
+<div class="flex justify-between p-2 bg-slate-700 rounded">
+    <span class="text-emerald-400">(+) Premio Puntualidad:</span>
+    <span id="outPuntualidad" class="font-mono text-emerald-400">---</span>
+</div>    
+
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
+            <span class="text-rose-400">(-) ISR Bruto (Antes de subsidio):</span>
+            <span id="outIsrBruto" class="font-mono text-rose-400">---</span>
+        </div>
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
+            <span class="text-emerald-400">(+) Subsidio al Empleo causado:</span>
+            <span id="outSubsidio" class="font-mono text-emerald-400">---</span>
+        </div>
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
+            <span class="text-rose-400">(=) Retención ISR Neta:</span>
+            <span id="outIsrNeta" class="font-mono text-rose-400">---</span>
+        </div>
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
+            <span class="text-rose-400">(-) Retención IMSS Obrero:</span>
+            <span id="outImssObrero" class="font-mono text-rose-400">---</span>
+        </div>
+        <div class="flex justify-between p-2 bg-emerald-900 font-bold rounded">
+            <span>(=) SUELDO NETO A DEPOSITAR:</span>
+            <span id="outNetoFinal" class="font-mono text-emerald-400">---</span>
+        </div>
+    </div>
+</div>
+
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+                    <h2 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-building-user mr-2 text-purple-400"></i>Costo de Carga Social Patronal</h2>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <span>Cuotas IMSS Patronal (Riesgo, Guarderías, etc.):</span>
+                            <span id="outImssPatronal" class="font-mono text-white">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <span>Retiro y Cesantía (RCV):</span>
+                            <span id="outRcvPatronal" class="font-mono text-white">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <span>Infonavit (5%):</span>
+                            <span id="outInfonavit" class="font-mono text-white">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-purple-900 font-bold rounded">
+                            <span>(=) TOTAL APORTACIONES PATRONALES:</span>
+                            <span id="outTotalPatron" class="font-mono text-purple-300">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const formateador = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+    // --- CONSTANTES OFICIALES 2026 ---
+    const UMA = 117.31;
+    const SMG = 315.04; 
+    const UMA_MENSUAL_2026 = UMA * 30.4; 
+    const SUBSIDIO_MENSUAL_2026 = UMA_MENSUAL_2026 * 0.1502; // Aprox $535.65
+    const LIMITE_SUBSIDIO_2026 = 11492.66; // Límite para aplicar subsidio
+
+    // --- TABLA MENSUAL DE ISR VIGENTE ---
+    const tablaISR = [
+        { limInf: 0.01, limSup: 844.59, cuotaFija: 0.00, pct: 1.92 },
+        { limInf: 844.6, limSup: 7168.51, cuotaFija: 16.22, pct: 6.40 },
+        { limInf: 7168.52, limSup: 12598.02, cuotaFija: 420.95, pct: 10.88 },
+        { limInf: 12598.03, limSup: 14644.64, cuotaFija: 1011.68, pct: 16.00 },
+        { limInf: 14644.65, limSup: 17533.64, cuotaFija: 1339.14, pct: 17.92 },
+        { limInf: 17533.65, limSup: 35362.83, cuotaFija: 1856.84, pct: 21.36 },
+        { limInf: 35362.84, limSup: 55736.68, cuotaFija: 5665.16, pct: 23.52 },
+        { limInf: 55736.69, limSup: 106410.5, cuotaFija: 10457.09, pct: 30.00 },
+        { limInf: 106410.51, limSup: 141880.66, cuotaFija: 25659.23, pct: 32.00 },
+        { limInf: 141880.67, limSup: 425641.99, cuotaFija: 37009.69, pct: 34.00 },
+        { limInf: 425642.00, limSup: Infinity, cuotaFija: 133488.54, pct: 35.00 }
+    ];
+
+    function calcularNomina() {
+        const sueldoMensual = parseFloat(document.getElementById('sueldoMensual').value) || 0;
+        const premioAsistenciaMensual = parseFloat(document.getElementById('premioAsistencia').value) || 0;
+        const premioPuntualidadMensual = parseFloat(document.getElementById('premioPuntualidad').value) || 0;
+        const periodicidad = document.getElementById('periodicidad').value;
+        const antiguedad = parseInt(document.getElementById('antiguedad').value) || 1;
+        const primaRiesgo = parseFloat(document.getElementById('riesgoTrabajo').value) / 100;
+
+        if (!sueldoMensual || sueldoMensual <= 0) {
+            alert("Por favor captura un sueldo mensual válido.");
+            return;
+        }
+
+        // --- 1. PERIODICIDAD ---
+        let diasPeriodo = 30.4;
+        if (periodicidad === 'quincenal') diasPeriodo = 15;
+        if (periodicidad === 'semanal') diasPeriodo = 7;
+
+        const factorProporcion = diasPeriodo / 30.4;
+
+        const sueldoDiario = sueldoMensual / 30.4;
+        const sueldoBrutoPeriodo = sueldoDiario * diasPeriodo;
+        
+        const premioAsistenciaPeriodo = premioAsistenciaMensual * factorProporcion;
+        const premioPuntualidadPeriodo = premioPuntualidadMensual * factorProporcion;
+
+        // --- 2. CALCULAR SDI / SBC BASE ---
+        let diasVacaciones = 12;
+        if (antiguedad === 2) diasVacaciones = 14;
+        if (antiguedad === 3) diasVacaciones = 16;
+        if (antiguedad === 4) diasVacaciones = 18;
+        if (antiguedad >= 5) diasVacaciones = 20;
+
+        const factorIntegracion = 1 + (15 / 365) + ((diasVacaciones * 0.25) / 365);
+        let sdiBaseSinPremios = sueldoDiario * factorIntegracion;
+
+        const limiteExentoPremioPeriodo = sdiBaseSinPremios * diasPeriodo * 0.10;
+
+        let excedenteAsistencia = 0;
+        if (premioAsistenciaPeriodo > limiteExentoPremioPeriodo) {
+            excedenteAsistencia = premioAsistenciaPeriodo - limiteExentoPremioPeriodo;
+        }
+
+        let excedentePuntualidad = 0;
+        if (premioPuntualidadPeriodo > limiteExentoPremioPeriodo) {
+            excedentePuntualidad = premioPuntualidadPeriodo - limiteExentoPremioPeriodo;
+        }
+
+        let sdiFinalImss = sdiBaseSinPremios + ((excedenteAsistencia + excedentePuntualidad) / diasPeriodo);
+        if (sdiFinalImss > (UMA * 25)) sdiFinalImss = UMA * 25;
+
+        // --- 3. BASE GRAVABLE ISR ---
+        const baseGravableIsrPeriodo = sueldoBrutoPeriodo + premioAsistenciaPeriodo + premioPuntualidadPeriodo;
+
+        let isrBruto = 0;
+        for (let i = 0; i < tablaISR.length; i++) {
+            let limInfProp = tablaISR[i].limInf * factorProporcion;
+            let limSupProp = tablaISR[i].limSup * factorProporcion;
+            let cuotaFijaProp = tablaISR[i].cuotaFija * factorProporcion;
+
+            if (baseGravableIsrPeriodo >= limInfProp && baseGravableIsrPeriodo <= limSupProp) {
+                let excedente = baseGravableIsrPeriodo - limInfProp;
+                isrBruto = cuotaFijaProp + (excedente * (tablaISR[i].pct / 100));
+                break;
+            }
+        }
+
+        let subsidioPeriodo = 0;
+        if (sueldoMensual <= LIMITE_SUBSIDIO_2026) {
+            subsidioPeriodo = (SUBSIDIO_MENSUAL_2026 / 30.4) * diasPeriodo;
+        }
+
+        let isrFinalRetener = isrBruto - subsidioPeriodo;
+        if (isrFinalRetener < 0) isrFinalRetener = 0;
+
+        // --- 4. IMSS OBRERO ---
+        const sdiPeriodo = sdiFinalImss * diasPeriodo;
+        let imssExcObrero = 0;
+        if (sdiFinalImss > (UMA * 3)) {
+            imssExcObrero = (sdiFinalImss - (UMA * 3)) * diasPeriodo * 0.004;
+        }
+        const totalImssObrero = imssExcObrero + (sdiPeriodo * 0.0025) + (sdiPeriodo * 0.00375) + (sdiPeriodo * 0.00625) + (sdiPeriodo * 0.01125);
+
+        // --- 5. CARGA PATRONAL (Mes Completo) ---
+        const sdiMes = sdiFinalImss * 30.4;
+        const umaMes = UMA * 30.4;
+        const imssCuotaFijaPatron = umaMes * 0.204;
+        
+        let imssExcPatron = 0;
+        if (sdiFinalImss > (UMA * 3)) {
+            imssExcPatron = (sdiFinalImss - (UMA * 3)) * 30.4 * 0.011;
+        }
+
+        const totalImssPatronal = imssCuotaFijaPatron + imssExcPatron + (sdiMes * 0.007) + (sdiMes * 0.0105) + (sdiMes * primaRiesgo) + (sdiMes * 0.0175) + (sdiMes * 0.01);
+        const totalRcvPatronal = (sdiMes * 0.02) + (sdiMes * 0.0424);
+        const totalInfonavit = sdiMes * 0.05;
+
+        // --- 6. TOTALES ---
+        const percepcionesTotalesPeriodo = sueldoBrutoPeriodo + premioAsistenciaPeriodo + premioPuntualidadPeriodo;
+        const sueldoNetoPeriodo = percepcionesTotalesPeriodo - isrFinalRetener - totalImssObrero;
+        const costoTotalPatron = percepcionesTotalesPeriodo + totalImssPatronal + totalRcvPatronal + totalInfonavit;
+
+        // --- 7. ACTUALIZAR INTERFAZ ---
+        document.getElementById('resNeto').innerText = formateador.format(sueldoNetoPeriodo);
+        document.getElementById('resSdi').innerText = formateador.format(sdiFinalImss);
+        document.getElementById('resCostoPatron').innerText = formateador.format(costoTotalPatron);
+
+        document.getElementById('outBrutoPeriodo').innerText = formateador.format(sueldoBrutoPeriodo);
+        document.getElementById('outAsistencia').innerText = formateador.format(premioAsistenciaPeriodo);
+        document.getElementById('outPuntualidad').innerText = formateador.format(premioPuntualidadPeriodo);
+        document.getElementById('outIsrBruto').innerText = formateador.format(isrBruto);
+        document.getElementById('outSubsidio').innerText = formateador.format(subsidioPeriodo);
+        document.getElementById('outIsrNeta').innerText = formateador.format(isrFinalRetener);
+        document.getElementById('outImssObrero').innerText = formateador.format(totalImssObrero);
+        document.getElementById('outNetoFinal').innerText = formateador.format(sueldoNetoPeriodo);
+
+        document.getElementById('outImssPatronal').innerText = formateador.format(totalImssPatronal);
+        document.getElementById('outRcvPatronal').innerText = formateador.format(totalRcvPatronal);
+        document.getElementById('outInfonavit').innerText = formateador.format(totalInfonavit);
+        document.getElementById('outTotalPatron').innerText = formateador.format(totalImssPatronal + totalRcvPatronal + totalInfonavit);
+    }
+
+    function resetearCalculadora() {
+        // Borrar inputs
+        document.getElementById('sueldoMensual').value = '';
+        document.getElementById('antiguedad').value = '1';
+        document.getElementById('riesgoTrabajo').value = '0.522';
+        document.getElementById('premioAsistencia').value = ''; // Inputs limpios
+        document.getElementById('premioPuntualidad').value = ''; 
+
+        // Borrar texto de salida
+        const ids = ["resNeto", "resSdi", "resCostoPatron", "outBrutoPeriodo", "outAsistencia", "outPuntualidad", "outIsrBruto", "outSubsidio", "outIsrNeta", "outImssObrero", "outNetoFinal", "outImssPatronal", "outRcvPatronal", "outInfonavit", "outTotalPatron"];
+        ids.forEach(id => {
+            const elemento = document.getElementById(id);
+            if(elemento) elemento.innerText = "---";
+        });
+    }
+</script>
+</body>
+</html>
