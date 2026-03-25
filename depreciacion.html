@@ -380,13 +380,22 @@ document.getElementById('valInpcMitad').innerText = inpcMitadPublicado.toFixed(3
 document.getElementById('valMoiBase').innerText = formateador.format(moi);
 document.getElementById('valDedFinal').innerText = formateador.format(dedEjercicioFinal);        }
 
-        function obtenerMesAnterior(dateObj) {
-            let temp = new Date(dateObj);
-            temp.setMonth(temp.getMonth() - 1);
-            let m = (temp.getMonth() + 1).toString().padStart(2, '0');
-            return `${temp.getFullYear()}-${m}`;
-        }
+// Para la Adquisición (Resta 1 mes)
+function obtenerMesAnterior(dateObj) {
+    let temp = new Date(dateObj);
+    temp.setMonth(temp.getMonth() - 1);
+    let m = (temp.getMonth() + 1).toString().padStart(2, '0');
+    return `${temp.getFullYear()}-${m}`;
+}
 
+// NUEVA: Para la Mitad del Periodo (Mismo mes directo, solo formatea a "YYYY-MM")
+function formatearMesDirecto(dateObj) {
+    let temp = new Date(dateObj);
+    let m = (temp.getMonth() + 1).toString().padStart(2, '0');
+    return `${temp.getFullYear()}-${m}`;
+}
+
+        
         function cambiarTab(tab) {
             if (tab === 'contable') {
                 document.getElementById('tab-contable').classList.remove('hidden');
