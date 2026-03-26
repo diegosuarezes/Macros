@@ -7,41 +7,42 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 font-sans text-slate-200">
+<body class="bg-slate-50 font-sans text-slate-800">
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-white mb-2">💸 Simulador de Nómina Inteligente</h1>
-            <p class="text-slate-400">Cálculo de ISR, IMSS Obrero y Carga Social Patronal (LFT vigentes).</p>
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">💸 Simulador de Nómina Inteligente</h1>
+            <p class="text-slate-500">Cálculo de ISR, IMSS Obrero y Carga Social Patronal (LFT vigentes).</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-emerald-400"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Datos del Trabajador</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-600">
+                    <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Datos del Trabajador
+                </h2>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Sueldo Bruto Mensual (Pactado)</label>
-                        <input type="number" id="sueldoMensual" placeholder="Ej. 25000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sueldo Bruto Mensual (Pactado)</label>
+                        <input type="number" id="sueldoMensual" placeholder="Ej. 25000" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
 
-<div class="grid grid-cols-2 gap-4">
-    <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Premio Asistencia (Mensual)</label>
-        <input type="number" id="premioAsistencia" placeholder="Ej. 1000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-    </div>
-    <div>
-        <label class="block text-sm font-medium text-slate-300 mb-1">Premio Puntualidad (Mensual)</label>
-        <input type="number" id="premioPuntualidad" placeholder="Ej. 1000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-    </div>
-</div>
-
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Premio Asistencia (Mensual)</label>
+                            <input type="number" id="premioAsistencia" placeholder="Ej. 1000" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Premio Puntualidad (Mensual)</label>
+                            <input type="number" id="premioPuntualidad" placeholder="Ej. 1000" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Periodicidad de Pago</label>
-                        <select id="periodicidad" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Periodicidad de Pago</label>
+                        <select id="periodicidad" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <option value="mensual">Mensual (30.4 días)</option>
                             <option value="quincenal">Quincenal (15 días)</option>
                             <option value="semanal">Semanal (7 días)</option>
@@ -49,20 +50,20 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Años de Antigüedad</label>
-                        <input type="number" id="antiguedad" value="1" min="1" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Años de Antigüedad</label>
+                        <input type="number" id="antiguedad" value="1" min="1" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Prima de Riesgo de Trabajo %</label>
-                        <input type="number" id="riesgoTrabajo" value="0.522" step="0.00001" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Prima de Riesgo de Trabajo %</label>
+                        <input type="number" id="riesgoTrabajo" value="0.522" step="0.00001" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <span class="text-xs text-slate-500">Clase I estándar: 0.522%</span>
                     </div>
 
-                    <button onclick="calcularNomina()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <button onclick="calcularNomina()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm">
                         <i class="fa-solid fa-calculator"></i> Calcular Nómina
                     </button>
-                    <button onclick="resetearCalculadora()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <button onclick="resetearCalculadora()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
                         <i class="fa-solid fa-trash-can"></i> Limpiar
                     </button>
                 </div>
@@ -71,81 +72,83 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                        <span class="text-sm text-slate-400">Sueldo Neto a Pagar</span>
-                        <h3 id="resNeto" class="text-2xl font-bold text-emerald-400 mt-1">---</h3>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-sm text-slate-500">Sueldo Neto a Pagar</span>
+                        <h3 id="resNeto" class="text-2xl font-bold text-emerald-600 mt-1">---</h3>
                     </div>
-                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                        <span class="text-sm text-slate-400">SBC / SDI (Diario)</span>
-                        <h3 id="resSdi" class="text-2xl font-bold text-sky-400 mt-1">---</h3>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-sm text-slate-500">SBC / SDI (Diario)</span>
+                        <h3 id="resSdi" class="text-2xl font-bold text-sky-600 mt-1">---</h3>
                     </div>
-                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                        <span class="text-sm text-slate-400">Costo Total Patrón</span>
-                        <h3 id="resCostoPatron" class="text-2xl font-bold text-purple-400 mt-1">---</h3>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-sm text-slate-500">Costo Total Patrón</span>
+                        <h3 id="resCostoPatron" class="text-2xl font-bold text-purple-600 mt-1">---</h3>
                     </div>
                 </div>
 
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-    <h2 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-receipt mr-2 text-sky-400"></i>Recibo del Trabajador (Retenciones)</h2>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-4 text-slate-800">
+                        <i class="fa-solid fa-receipt mr-2 text-sky-600"></i>Recibo del Trabajador (Retenciones)
+                    </h2>
 
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-slate-700">Sueldo Bruto del Periodo:</span>
+                            <span id="outBrutoPeriodo" class="font-mono text-slate-900 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-emerald-700 font-medium">(+) Premio Asistencia:</span>
+                            <span id="outAsistencia" class="font-mono text-emerald-600 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-emerald-700 font-medium">(+) Premio Puntualidad:</span>
+                            <span id="outPuntualidad" class="font-mono text-emerald-600 font-semibold">---</span>
+                        </div>    
 
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-rose-700 font-medium">(-) ISR Bruto (Antes de subsidio):</span>
+                            <span id="outIsrBruto" class="font-mono text-rose-600 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-emerald-700 font-medium">(+) Subsidio al Empleo causado:</span>
+                            <span id="outSubsidio" class="font-mono text-emerald-600 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-rose-700 font-medium">(=) Retención ISR Neta:</span>
+                            <span id="outIsrNeta" class="font-mono text-rose-600 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-rose-700 font-medium">(-) Retención IMSS Obrero:</span>
+                            <span id="outImssObrero" class="font-mono text-rose-600 font-semibold">---</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-emerald-50 font-bold rounded border border-emerald-200">
+                            <span class="text-emerald-800">(=) SUELDO NETO A DEPOSITAR:</span>
+                            <span id="outNetoFinal" class="font-mono text-emerald-600">---</span>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="space-y-2 text-sm">
-        <div class="flex justify-between p-2 bg-slate-700 rounded">
-            <span>Sueldo Bruto del Periodo:</span>
-            <span id="outBrutoPeriodo" class="font-mono text-white">---</span>
-        </div>
-<div class="flex justify-between p-2 bg-slate-700 rounded">
-    <span class="text-emerald-400">(+) Premio Asistencia:</span>
-    <span id="outAsistencia" class="font-mono text-emerald-400">---</span>
-</div>
-<div class="flex justify-between p-2 bg-slate-700 rounded">
-    <span class="text-emerald-400">(+) Premio Puntualidad:</span>
-    <span id="outPuntualidad" class="font-mono text-emerald-400">---</span>
-</div>    
-
-        <div class="flex justify-between p-2 bg-slate-700 rounded">
-            <span class="text-rose-400">(-) ISR Bruto (Antes de subsidio):</span>
-            <span id="outIsrBruto" class="font-mono text-rose-400">---</span>
-        </div>
-        <div class="flex justify-between p-2 bg-slate-700 rounded">
-            <span class="text-emerald-400">(+) Subsidio al Empleo causado:</span>
-            <span id="outSubsidio" class="font-mono text-emerald-400">---</span>
-        </div>
-        <div class="flex justify-between p-2 bg-slate-700 rounded">
-            <span class="text-rose-400">(=) Retención ISR Neta:</span>
-            <span id="outIsrNeta" class="font-mono text-rose-400">---</span>
-        </div>
-        <div class="flex justify-between p-2 bg-slate-700 rounded">
-            <span class="text-rose-400">(-) Retención IMSS Obrero:</span>
-            <span id="outImssObrero" class="font-mono text-rose-400">---</span>
-        </div>
-        <div class="flex justify-between p-2 bg-emerald-900 font-bold rounded">
-            <span>(=) SUELDO NETO A DEPOSITAR:</span>
-            <span id="outNetoFinal" class="font-mono text-emerald-400">---</span>
-        </div>
-    </div>
-</div>
-
-                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                    <h2 class="text-lg font-semibold mb-4 text-white"><i class="fa-solid fa-building-user mr-2 text-purple-400"></i>Costo de Carga Social Patronal</h2>
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-4 text-slate-800">
+                        <i class="fa-solid fa-building-user mr-2 text-purple-600"></i>Costo de Carga Social Patronal
+                    </h2>
                     
                     <div class="space-y-2 text-sm">
-                        <div class="flex justify-between p-2 bg-slate-700 rounded">
-                            <span>Cuotas IMSS Patronal (Riesgo, Guarderías, etc.):</span>
-                            <span id="outImssPatronal" class="font-mono text-white">---</span>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-slate-700">Cuotas IMSS Patronal (Riesgo, Guarderías, etc.):</span>
+                            <span id="outImssPatronal" class="font-mono text-slate-900 font-semibold">---</span>
                         </div>
-                        <div class="flex justify-between p-2 bg-slate-700 rounded">
-                            <span>Retiro y Cesantía (RCV):</span>
-                            <span id="outRcvPatronal" class="font-mono text-white">---</span>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-slate-700">Retiro y Cesantía (RCV):</span>
+                            <span id="outRcvPatronal" class="font-mono text-slate-900 font-semibold">---</span>
                         </div>
-                        <div class="flex justify-between p-2 bg-slate-700 rounded">
-                            <span>Infonavit (5%):</span>
-                            <span id="outInfonavit" class="font-mono text-white">---</span>
+                        <div class="flex justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                            <span class="text-slate-700">Infonavit (5%):</span>
+                            <span id="outInfonavit" class="font-mono text-slate-900 font-semibold">---</span>
                         </div>
-                        <div class="flex justify-between p-2 bg-purple-900 font-bold rounded">
-                            <span>(=) TOTAL APORTACIONES PATRONALES:</span>
-                            <span id="outTotalPatron" class="font-mono text-purple-300">---</span>
+                        <div class="flex justify-between p-2 bg-purple-50 font-bold rounded border border-purple-200">
+                            <span class="text-purple-800">(=) TOTAL APORTACIONES PATRONALES:</span>
+                            <span id="outTotalPatron" class="font-mono text-purple-600">---</span>
                         </div>
                     </div>
                 </div>
@@ -301,14 +304,12 @@
     }
 
     function resetearCalculadora() {
-        // Borrar inputs
         document.getElementById('sueldoMensual').value = '';
         document.getElementById('antiguedad').value = '1';
         document.getElementById('riesgoTrabajo').value = '0.522';
-        document.getElementById('premioAsistencia').value = ''; // Inputs limpios
+        document.getElementById('premioAsistencia').value = ''; 
         document.getElementById('premioPuntualidad').value = ''; 
 
-        // Borrar texto de salida
         const ids = ["resNeto", "resSdi", "resCostoPatron", "outBrutoPeriodo", "outAsistencia", "outPuntualidad", "outIsrBruto", "outSubsidio", "outIsrNeta", "outImssObrero", "outNetoFinal", "outImssPatronal", "outRcvPatronal", "outInfonavit", "outTotalPatron"];
         ids.forEach(id => {
             const elemento = document.getElementById(id);
