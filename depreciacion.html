@@ -8,44 +8,52 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-900 font-sans text-slate-200">
+<body class="bg-slate-50 font-sans text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <header class="py-4 bg-white border-b border-slate-200 shadow-sm flex-shrink-0">
+        <div class="container mx-auto px-4 max-w-5xl flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-sky-600"></i> Control de Activos Fijos (México)
+                </h1>
+                <p class="text-slate-500 text-sm">Depreciación Contable (NIF C-6) y Deducción de Inversiones (LISR)</p>
+            </div>
+            <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full font-semibold">ACTIVOS FIJOS</span>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 max-w-5xl flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 h-[calc(100vh-5rem)] overflow-hidden">
         
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-white mb-2">Control de Activos Fijos (México)</h1>
-            <p class="text-slate-400">Depreciación Contable (NIF C-6) y Deducción de Inversiones (LISR)</p>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-sky-400"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Datos del Activo</h2>
+        <div class="lg:col-span-1 flex flex-col h-full space-y-4 overflow-y-auto pr-1">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit flex-shrink-0">
+                <h2 class="text-xl font-semibold mb-4 text-sky-600">
+                    <i class="fa-solid fa-file-invoice-dollar mr-2"></i>Datos del Activo
+                </h2>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Nombre del Activo</label>
-                        <input type="text" id="nombre" placeholder="Ej. Equipo de Cómputo" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nombre del Activo</label>
+                        <input type="text" id="nombre" placeholder="Ej. Equipo de Cómputo" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">MOI (Monto Original sin IVA)</label>
-                        <input type="number" id="moi" placeholder="Ej. 35000" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">MOI (Monto Original sin IVA)</label>
+                        <input type="number" id="moi" placeholder="Ej. 35000" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">Mes/Año de Adquisición</label>
-                        <input type="month" id="fecha" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Mes/Año de Adquisición</label>
+                        <input type="month" id="fecha" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
 
-<div>
-    <label class="block text-sm font-medium text-slate-300 mb-1">Fecha de Corte / Último Mes de Uso</label>
-    <input type="month" id="fechaCorte" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-</div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Fecha de Corte / Último Mes de Uso</label>
+                        <input type="month" id="fechaCorte" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">% Deducción Autorizado (Anual)</label>
-                        <select id="porcentaje" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">% Deducción Autorizado (Anual)</label>
+                        <select id="porcentaje" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
                             <option value="30">30% (Equipo de Cómputo)</option>
                             <option value="25">25% (Automóviles)</option>
                             <option value="10">10% (Mobiliario y Equipo)</option>
@@ -53,140 +61,148 @@
                         </select>
                     </div>
 
-                    <button onclick="calcularTodo()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-calculator"></i> Calcular Cierre Fiscal
-                    </button>
-                <button onclick="limpiarFormulario()" class="w-full mt-2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
-    <i class="fa-solid fa-trash-can"></i> Borrar Todo
-</button>
+                    <div class="space-y-2 pt-2">
+                        <button onclick="calcularTodo()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-calculator"></i> Calcular Cierre Fiscal
+                        </button>
 
-                <button onclick="descargarExcelDepreciacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
-    <i class="fa-solid fa-file-excel"></i> Descargar Reporte Excel
-</button>
-                    
+                        <button onclick="descargarExcelDepreciacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i> Descargar Reporte Excel
+                        </button>
+
+                        <button onclick="limpiarFormulario()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-trash-can"></i> Borrar Todo
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 flex flex-col h-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <div class="p-4 border-b border-slate-200 flex-shrink-0">
+                <nav class="flex space-x-4" aria-label="Tabs">
+                    <button onclick="cambiarTab('contable')" id="tab-contable-btn" class="py-2 px-4 border-b-2 border-sky-600 text-sky-600 font-bold text-sm transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-compass-drafting"></i> Depreciación Contable
+                    </button>
+                    <button onclick="cambiarTab('fiscal')" id="tab-fiscal-btn" class="py-2 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced"></i> Deducción Fiscal (LISR)
+                    </button>
+                </nav>
+            </div>
 
-                <div class="border-b border-slate-700">
-                    <nav class="flex space-x-4" aria-label="Tabs">
-                        <button onclick="cambiarTab('contable')" id="tab-contable-btn" class="py-2 px-4 border-b-2 border-sky-500 text-sky-400 font-medium text-sm transition-all duration-200">
-                            📐 Depreciación Contable
-                        </button>
-                        <button onclick="cambiarTab('fiscal')" id="tab-fiscal-btn" class="py-2 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-300 font-medium text-sm transition-all duration-200">
-                            ⚖️ Deducción de Inversiones (LISR)
-                        </button>
-                    </nav>
-                </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
 
-                <div id="tab-contable" class="block space-y-4">
+                <div id="tab-contable" class="block space-y-6">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                            <span class="text-sm text-slate-400">Dep. Mensual Contable</span>
-                            <h3 id="resMenContable" class="text-2xl font-bold text-emerald-400 mt-1">---</h3>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <span class="text-sm text-slate-600">Dep. Mensual Contable</span>
+                            <h3 id="resMenContable" class="text-2xl font-bold text-emerald-600 mt-1">---</h3>
                         </div>
-                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                            <span class="text-sm text-slate-400">Dep. Anual Contable</span>
-                            <h3 id="resAnuContable" class="text-2xl font-bold text-sky-400 mt-1">---</h3>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <span class="text-sm text-slate-600">Dep. Anual Contable</span>
+                            <h3 id="resAnuContable" class="text-2xl font-bold text-sky-600 mt-1">---</h3>
                         </div>
                     </div>
 
-                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                        <h2 class="text-lg font-semibold mb-4 text-white">Proyección Contable (Mes por Mes)</h2>
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200">
+                            <h2 class="text-md font-semibold text-slate-800">Proyección Contable (Mes por Mes)</h2>
+                        </div>
                         <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-sm">
+                            <table class="w-full text-left border-collapse text-sm text-slate-700">
                                 <thead>
-                                    <tr class="bg-slate-700 text-slate-300">
-                                        <th class="p-2 border-b border-slate-600">Periodo</th>
-                                        <th class="p-2 border-b border-slate-600">Cuota Mensual</th>
-                                        <th class="p-2 border-b border-slate-600">Valor en Libros</th>
+                                    <tr class="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+                                        <th class="p-3">Periodo</th>
+                                        <th class="p-3">Cuota Mensual</th>
+                                        <th class="p-3">Valor en Libros</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cuerpoContable" class="divide-y divide-slate-700 text-slate-300">
-                                    <tr><td colspan="3" class="p-4 text-center text-slate-500">Calcula para ver datos...</td></tr>
+                                <tbody id="cuerpoContable" class="divide-y divide-slate-200 bg-white">
+                                    <tr><td colspan="3" class="p-4 text-center text-slate-400">Calcula para ver datos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <div id="tab-fiscal" class="hidden space-y-4">
+                <div id="tab-fiscal" class="hidden space-y-6">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                            <span class="text-sm text-slate-400">Meses de Uso (Ejercicio)</span>
-                            <h3 id="resMesesUso" class="text-xl font-bold text-white mt-1">---</h3>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <span class="text-sm text-slate-600">Meses de Uso (Ejercicio)</span>
+                            <h3 id="resMesesUso" class="text-2xl font-bold text-slate-800 mt-1">---</h3>
                         </div>
-                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                            <span class="text-sm text-slate-400">Factor de Actualización</span>
-                            <h3 id="resFactor" class="text-xl font-bold text-amber-400 mt-1">---</h3>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <span class="text-sm text-slate-600">Factor de Actualización</span>
+                            <h3 id="resFactor" class="text-2xl font-bold text-amber-600 mt-1">---</h3>
                         </div>
-                        <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg">
-                            <span class="text-sm text-slate-400">Deducción de Inversión Fiscal</span>
-                            <h3 id="resDeduccionFiscal" class="text-xl font-bold text-emerald-400 mt-1">---</h3>
+                        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <span class="text-sm text-slate-600">Deducción de Inversión Fiscal</span>
+                            <h3 id="resDeduccionFiscal" class="text-2xl font-bold text-emerald-600 mt-1">---</h3>
                         </div>
                     </div>
 
-                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                        <h2 class="text-lg font-semibold mb-2 text-white">Memoria de Cálculo Fiscal (LISR)</h2>
-                        <p class="text-xs text-slate-400 mb-4">Aplica el criterio DOF: Índices del mes anterior al oficial.</p>
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200">
+                            <h2 class="text-md font-semibold text-slate-800">Memoria de Cálculo Fiscal (LISR)</h2>
+                            <p class="text-xs text-slate-500">Criterio DOF: Índices del mes anterior al oficial.</p>
+                        </div>
                         
-                        <div class="space-y-2 text-sm text-slate-300">
-                            <div class="flex justify-between p-2 bg-slate-700 rounded">
+                        <div class="p-4 space-y-2 text-sm text-slate-700">
+                            <div class="flex justify-between p-2.5 bg-slate-50 rounded border border-slate-200">
                                 <span>INPC Publicado de Adquisición (Mes Anterior):</span>
-                                <span id="valInpcAdq" class="font-mono text-white">---</span>
+                                <span id="valInpcAdq" class="font-mono text-slate-900 font-semibold">---</span>
                             </div>
-                            <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <div class="flex justify-between p-2.5 bg-slate-50 rounded border border-slate-200">
                                 <span>Último Mes de la 1era Mitad de Uso:</span>
-                                <span id="valMesMitad" class="font-mono text-white">---</span>
+                                <span id="valMesMitad" class="font-mono text-slate-900 font-semibold">---</span>
                             </div>
-                            <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <div class="flex justify-between p-2.5 bg-slate-50 rounded border border-slate-200">
                                 <span>INPC Publicado de la 1era Mitad (Oficial):</span>
-                                <span id="valInpcMitad" class="font-mono text-white">---</span>
+                                <span id="valInpcMitad" class="font-mono text-slate-900 font-semibold">---</span>
                             </div>
-                            <div class="flex justify-between p-2 bg-slate-700 rounded">
+                            <div class="flex justify-between p-2.5 bg-slate-50 rounded border border-slate-200">
                                 <span>Monto Original de la Inversión (MOI):</span>
-                                <span id="valMoiBase" class="font-mono text-white">---</span>
+                                <span id="valMoiBase" class="font-mono text-slate-900 font-semibold">---</span>
                             </div>
-                            <div class="flex justify-between p-2 bg-slate-700 rounded font-bold">
-                                <span>Deducción del Ejercicio Fiscal Actual:</span>
-                                <span id="valDedFinal" class="font-mono text-emerald-400">---</span>
+                            <div class="flex justify-between p-2.5 bg-emerald-50 rounded border border-emerald-200 font-bold">
+                                <span class="text-emerald-800">Deducción del Ejercicio Fiscal Actual:</span>
+                                <span id="valDedFinal" class="font-mono text-emerald-600">---</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
             </div>
-
         </div>
+
     </div>
 
     <script>
-       // Simulador de Base de Datos INPC Histórico para que funcione el cálculo
-const baseINPC = {
-  "2026-02": 144.307,"2026-01": 143.588,
-  "2025-12": 143.042,"2025-11": 142.645,"2025-10": 141.708,"2025-09": 141.197,"2025-08": 140.867,"2025-07": 140.78,"2025-06": 140.405,"2025-05": 140.012,"2025-04": 139.62,"2025-03": 139.161,"2025-02": 138.726,"2025-01": 138.343,
-  "2024-12": 137.949,"2024-11": 137.424,"2024-10": 136.828, "2024-09": 136.08,"2024-08": 136.013,"2024-07": 136.003,"2024-06": 134.594,"2024-05": 134.087,"2024-04": 134.336,"2024-03": 134.065,"2024-02": 133.681,"2024-01": 133.555,
-  "2023-12": 132.373,"2023-11": 131.445,"2023-10": 130.609,"2023-09": 130.12,"2023-08": 129.545,"2023-07": 128.832,"2023-06": 128.214,"2023-05": 128.084,"2023-04": 128.363,"2023-03": 128.389,"2023-02": 128.046,"2023-01": 127.336,
-  "2022-12": 126.478,"2022-11": 125.997,"2022-10": 125.276,"2022-09": 124.571,"2022-08": 123.803,"2022-07": 122.948,"2022-06": 122.044,"2022-05": 121.022,"2022-04": 120.809,"2022-03": 120.159,"2022-02": 118.981,"2022-01": 118.002,
-  "2021-12": 117.308,"2021-11": 116.884,"2021-10": 115.561,"2021-09": 114.601,"2021-08": 113.899,"2021-07": 113.682,"2021-06": 113.018,"2021-05": 112.419,"2021-04": 112.19,"2021-03": 111.824,"2021-02": 110.907,"2021-01": 110.21,
-  "2020-12": 109.271,"2020-11": 108.856,"2020-10": 108.774,"2020-09": 108.114,"2020-08": 107.867,"2020-07": 107.444,"2020-06": 106.743,"2020-05": 106.162,"2020-04": 105.755,"2020-03": 106.838,"2020-02": 106.889,"2020-01": 106.447,
-  "2019-12": 105.934,"2019-11": 105.346,"2019-10": 104.503,"2019-09": 103.942,"2019-08": 103.67,"2019-07": 103.687,"2019-06": 103.299,"2019-05": 103.233,"2019-04": 103.531,"2019-03": 103.476,"2019-02": 103.079,"2019-01": 103.108,
-  "2018-12": 103.02,"2018-11": 102.303,"2018-10": 101.44,"2018-09": 100.917,"2018-08": 100.492,"2018-07": 99.909,"2018-06": 99.376,"2018-05": 98.994,"2018-04": 99.155,"2018-03": 99.492,"2018-02": 99.171,"2018-01": 98.795,
-  "2017-12": 98.273,"2017-11": 97.695,"2017-10": 96.698,"2017-09": 96.094,"2017-08": 95.794,"2017-07": 95.323,"2017-06": 94.964,"2017-05": 94.725,"2017-04": 94.839,"2017-03": 94.722,"2017-02": 94.145,"2017-01": 93.604,
-  "2016-12": 92.039,"2016-11": 91.617,"2016-10": 90.906,"2016-09": 90.358,"2016-08": 89.809,"2016-07": 89.557,"2016-06": 89.324,"2016-05": 89.226,"2016-04": 89.91,"2016-03": 89.91,"2016-02": 89.778,"2016-01": 89.386,
-  "2015-12": 89.047, "2015-11": 88.685, "2015-10": 88.204, "2015-09": 87.752, "2015-08": 87.425, "2015-07": 87.241, "2015-06": 87.113, "2015-05": 86.967, "2015-04": 87.404, "2015-03": 87.631, "2015-02": 87.275, "2015-01": 87.11,
-  "2014-12": 87.189, "2014-11": 86.764, "2014-10": 86.07, "2014-09": 85.596, "2014-08": 85.22, "2014-07": 84.915, "2014-06": 84.682, "2014-05": 84.536, "2014-04": 84.807, "2014-03": 84.965, "2014-02": 84.733, "2014-01": 84.519,
-  "2013-12": 83.77, "2013-11": 83.292, "2013-10": 82.523, "2013-09": 82.132, "2013-08": 81.824, "2013-07": 81.592, "2013-06": 81.619, "2013-05": 81.669, "2013-04": 81.942, "2013-03": 81.887, "2013-02": 81.291, "2013-01": 80.893,
-  "2012-12": 80.568, "2012-11": 80.383, "2012-10": 79.841, "2012-09": 79.439, "2012-08": 79.091, "2012-07": 78.854, "2012-06": 78.414, "2012-05": 78.054, "2012-04": 78.301, "2012-03": 78.547, "2012-02": 78.502, "2012-01": 78.343,
-  "2011-12": 77.792, "2011-11": 77.158, "2011-10": 76.333, "2011-09": 75.821, "2011-08": 75.636, "2011-07": 75.516, "2011-06": 75.156, "2011-05": 75.159, "2011-04": 75.717, "2011-03": 75.723, "2011-02": 75.578, "2011-01": 75.296,
-  "2010-12": 74.931, "2010-11": 74.562, "2010-10": 73.969, "2010-09": 73.515, "2010-08": 73.132, "2010-07": 72.929, "2010-06": 72.771, "2010-05": 72.794, "2010-04": 73.256, "2010-03": 73.49, "2010-02": 72.972, "2010-01": 72.552,
-  "2009-12": 71.772, "2009-11": 71.476, "2009-10": 71.107, "2009-09": 70.893, "2009-08": 70.539, "2009-07": 70.371, "2009-06": 70.179, "2009-05": 70.05, "2009-04": 70.255, "2009-03": 70.01, "2009-02": 69.609, "2009-01": 69.456,
-  "2008-12": 69.296, "2008-11": 68.819, "2008-10": 68.045, "2008-09": 67.585, "2008-08": 67.127, "2008-07": 66.742, "2008-06": 66.372, "2008-05": 66.099, "2008-04": 66.17, "2008-03": 66.02, "2008-02": 65.545, "2008-01": 65.351,
-  "2007-12": 65.049, "2007-11": 64.781, "2007-10": 64.327, "2007-09": 64.078, "2007-08": 63.584, "2007-07": 63.326, "2007-06": 63.058, "2007-05": 62.983, "2007-04": 63.291, "2007-03": 63.329, "2007-02": 63.192, "2007-01": 63.016,
-  "2006-12": 62.692, "2006-11": 62.332, "2006-10": 62.007, "2006-09": 61.737, "2006-08": 61.12, "2006-07": 60.809, "2006-06": 60.643, "2006-05": 60.591, "2006-04": 60.862, "2006-03": 60.773, "2006-02": 60.696, "2006-01": 60.604,
-  "2005-12": 60.25, "2005-11": 59.882, "2005-10": 59.455, "2005-09": 59.309, "2005-08": 59.072, "2005-07": 59.002, "2005-06": 58.772, "2005-05": 58.828, "2005-04": 58.976, "2005-03": 58.767, "2005-02": 58.503, "2005-01": 58.309,
-  "2004-12": 58.307, "2004-11": 58.187, "2004-10": 57.695, "2004-09": 57.298, "2004-08": 56.828, "2004-07": 56.479, "2004-06": 56.332, "2004-05": 56.242, "2004-04": 56.383, "2004-03": 56.298, "2004-02": 56.108, "2004-01": 55.774,
+        const baseINPC = {
+          "2026-02": 144.307,"2026-01": 143.588,
+          "2025-12": 143.042,"2025-11": 142.645,"2025-10": 141.708,"2025-09": 141.197,"2025-08": 140.867,"2025-07": 140.78,"2025-06": 140.405,"2025-05": 140.012,"2025-04": 139.62,"2025-03": 139.161,"2025-02": 138.726,"2025-01": 138.343,
+          "2024-12": 137.949,"2024-11": 137.424,"2024-10": 136.828,"2024-09": 136.08,"2024-08": 136.013,"2024-07": 136.003,"2024-06": 134.594,"2024-05": 134.087,"2024-04": 134.336,"2024-03": 134.065,"2024-02": 133.681,"2024-01": 133.555,
+          "2023-12": 132.373,"2023-11": 131.445,"2023-10": 130.609,"2023-09": 130.12,"2023-08": 129.545,"2023-07": 128.832,"2023-06": 128.214,"2023-05": 128.084,"2023-04": 128.363,"2023-03": 128.389,"2023-02": 128.046,"2023-01": 127.336,
+          "2022-12": 126.478,"2022-11": 125.997,"2022-10": 125.276,"2022-09": 124.571,"2022-08": 123.803,"2022-07": 122.948,"2022-06": 122.044,"2022-05": 121.022,"2022-04": 120.809,"2022-03": 120.159,"2022-02": 118.981,"2022-01": 118.002,
+          "2021-12": 117.308,"2021-11": 116.884,"2021-10": 115.561,"2021-09": 114.601,"2021-08": 113.899,"2021-07": 113.682,"2021-06": 113.018,"2021-05": 112.419,"2021-04": 112.19,"2021-03": 111.824,"2021-02": 110.907,"2021-01": 110.21,
+          "2020-12": 109.271,"2020-11": 108.856,"2020-10": 108.774,"2020-09": 108.114,"2020-08": 107.867,"2020-07": 107.444,"2020-06": 106.743,"2020-05": 106.162,"2020-04": 105.755,"2020-03": 106.838,"2020-02": 106.889,"2020-01": 106.447,
+          "2019-12": 105.934,"2019-11": 105.346,"2019-10": 104.503,"2019-09": 103.942,"2019-08": 103.67,"2019-07": 103.687,"2019-06": 103.299,"2019-05": 103.233,"2019-04": 103.531,"2019-03": 103.476,"2019-02": 103.079,"2019-01": 103.108,
+          "2018-12": 103.02,"2018-11": 102.303,"2018-10": 101.44,"2018-09": 100.917,"2018-08": 100.492,"2018-07": 99.909,"2018-06": 99.376,"2018-05": 98.994,"2018-04": 99.155,"2018-03": 99.492,"2018-02": 99.171,"2018-01": 98.795,
+          "2017-12": 98.273,"2017-11": 97.695,"2017-10": 96.698,"2017-09": 96.094,"2017-08": 95.794,"2017-07": 95.323,"2017-06": 94.964,"2017-05": 94.725,"2017-04": 94.839,"2017-03": 94.722,"2017-02": 94.145,"2017-01": 93.604,
+          "2016-12": 92.039,"2016-11": 91.617,"2016-10": 90.906,"2016-09": 90.358,"2016-08": 89.809,"2016-07": 89.557,"2016-06": 89.324,"2016-05": 89.226,"2016-04": 89.91,"2016-03": 89.91,"2016-02": 89.778,"2016-01": 89.386,
+          "2015-12": 89.047, "2015-11": 88.685, "2015-10": 88.204, "2015-09": 87.752, "2015-08": 87.425, "2015-07": 87.241, "2015-06": 87.113, "2015-05": 86.967, "2015-04": 87.404, "2015-03": 87.631, "2015-02": 87.275, "2015-01": 87.11,
+          "2014-12": 87.189, "2014-11": 86.764, "2014-10": 86.07, "2014-09": 85.596, "2014-08": 85.22, "2014-07": 84.915, "2014-06": 84.682, "2014-05": 84.536, "2014-04": 84.807, "2014-03": 84.965, "2014-02": 84.733, "2014-01": 84.519,
+          "2013-12": 83.77, "2013-11": 83.292, "2013-10": 82.523, "2013-09": 82.132, "2013-08": 81.824, "2013-07": 81.592, "2013-06": 81.619, "2013-05": 81.669, "2013-04": 81.942, "2013-03": 81.887, "2013-02": 81.291, "2013-01": 80.893,
+          "2012-12": 80.568, "2012-11": 80.383, "2012-10": 79.841, "2012-09": 79.439, "2012-08": 79.091, "2012-07": 78.854, "2012-06": 78.414, "2012-05": 78.054, "2012-04": 78.301, "2012-03": 78.547, "2012-02": 78.502, "2012-01": 78.343,
+          "2011-12": 77.792, "2011-11": 77.158, "2011-10": 76.333, "2011-09": 75.821, "2011-08": 75.636, "2011-07": 75.516, "2011-06": 75.156, "2011-05": 75.159, "2011-04": 75.717, "2011-03": 75.723, "2011-02": 75.578, "2011-01": 75.296,
+          "2010-12": 74.931, "2010-11": 74.562, "2010-10": 73.969, "2010-09": 73.515, "2010-08": 73.132, "2010-07": 72.929, "2010-06": 72.771, "2010-05": 72.794, "2010-04": 73.256, "2010-03": 73.49, "2010-02": 72.972, "2010-01": 72.552,
+          "2009-12": 71.772, "2009-11": 71.476, "2009-10": 71.107, "2009-09": 70.893, "2009-08": 70.539, "2009-07": 70.371, "2009-06": 70.179, "2009-05": 70.05, "2009-04": 70.255, "2009-03": 70.01, "2009-02": 69.609, "2009-01": 69.456,
+          "2008-12": 69.296, "2008-11": 68.819, "2008-10": 68.045, "2008-09": 67.585, "2008-08": 67.127, "2008-07": 66.742, "2008-06": 66.372, "2008-05": 66.099, "2008-04": 66.17, "2008-03": 66.02, "2008-02": 65.545, "2008-01": 65.351,
+          "2007-12": 65.049, "2007-11": 64.781, "2007-10": 64.327, "2007-09": 64.078, "2007-08": 63.584, "2007-07": 63.326, "2007-06": 63.058, "2007-05": 62.983, "2007-04": 63.291, "2007-03": 63.329, "2007-02": 63.192, "2007-01": 63.016,
+          "2006-12": 62.692, "2006-11": 62.332, "2006-10": 62.007, "2006-09": 61.737, "2006-08": 61.12, "2006-07": 60.809, "2006-06": 60.643, "2006-05": 60.591, "2006-04": 60.862, "2006-03": 60.773, "2006-02": 60.696, "2006-01": 60.604,
+          "2005-12": 60.25, "2005-11": 59.882, "2005-10": 59.455, "2005-09": 59.309, "2005-08": 59.072, "2005-07": 59.002, "2005-06": 58.772, "2005-05": 58.828, "2005-04": 58.976, "2005-03": 58.767, "2005-02": 58.503, "2005-01": 58.309,
+          "2004-12": 58.307, "2004-11": 58.187, "2004-10": 57.695, "2004-09": 57.298, "2004-08": 56.828, "2004-07": 56.479, "2004-06": 56.332, "2004-05": 56.242, "2004-04": 56.383, "2004-03": 56.298, "2004-02": 56.108, "2004-01": 55.774,
   "2003-12": 55.43, "2003-11": 55.193, "2003-10": 54.738, "2003-09": 54.538, "2003-08": 54.215, "2003-07": 54.053, "2003-06": 53.975, "2003-05": 53.931, "2003-04": 54.105, "2003-03": 54.013, "2003-02": 53.674, "2003-01": 53.525,
   "2002-12": 53.31, "2002-11": 53.079, "2002-10": 52.653, "2002-09": 52.422, "2002-08": 52.109, "2002-07": 51.911, "2002-06": 51.763, "2002-05": 51.511, "2002-04": 51.407, "2002-03": 51.128, "2002-02": 50.868, "2002-01": 50.9,
   "2001-12": 50.435, "2001-11": 50.365, "2001-10": 50.176, "2001-09": 49.95, "2001-08": 49.49, "2001-07": 49.198, "2001-06": 49.326, "2001-05": 49.21, "2001-04": 49.097, "2001-03": 48.851, "2001-02": 48.543, "2001-01": 48.575,
@@ -222,249 +238,243 @@ const baseINPC = {
   "1971-12": 0.013, "1971-11": 0.013, "1971-10": 0.013, "1971-09": 0.013, "1971-08": 0.013, "1971-07": 0.013, "1971-06": 0.013, "1971-05": 0.013, "1971-04": 0.013, "1971-03": 0.013, "1971-02": 0.013, "1971-01": 0.013,
   "1970-12": 0.013, "1970-11": 0.013, "1970-10": 0.013, "1970-09": 0.012, "1970-08": 0.012, "1970-07": 0.012, "1970-06": 0.012, "1970-05": 0.012, "1970-04": 0.012, "1970-03": 0.012, "1970-02": 0.012, "1970-01": 0.012,
   "1969-12": 0.012, "1969-11": 0.012, "1969-10": 0.012, "1969-09": 0.012, "1969-08": 0.012, "1969-07": 0.012, "1969-06": 0.012, "1969-05": 0.012, "1969-04": 0.012, "1969-03": 0.012, "1969-02": 0.012
-};
+        };
 
-const formateador = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+        const formateador = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-function calcularTodo() {
-    const moi = parseFloat(document.getElementById('moi').value);
-    const porcentaje = parseFloat(document.getElementById('porcentaje').value) / 100;
-    const fechaAdqInput = document.getElementById('fecha').value;
+        function calcularTodo() {
+            const moi = parseFloat(document.getElementById('moi').value);
+            const porcentaje = parseFloat(document.getElementById('porcentaje').value) / 100;
+            const fechaAdqInput = document.getElementById('fecha').value;
 
-    if (!moi || !fechaAdqInput || moi <= 0) {
-        alert("Por favor captura datos válidos.");
-        return;
-    }
-
-    // 🧮 1. DEPRECIACIÓN CONTABLE
-    const fechaCorteContableInput = document.getElementById('fechaCorte').value;
-    if (!fechaCorteContableInput) {
-        alert("Por favor selecciona una fecha de corte.");
-        return;
-    }
-
-    const depAnualContable = moi * porcentaje;
-    const depMensualContable = depAnualContable / 12;
-
-    document.getElementById('resAnuContable').innerText = formateador.format(depAnualContable);
-    document.getElementById('resMenContable').innerText = formateador.format(depMensualContable);
-
-    const cuerpoContable = document.getElementById('cuerpoContable');
-    cuerpoContable.innerHTML = '';
-
-    let vLibros = moi;
-    let fechaAdquisicion = new Date(fechaAdqInput + "-02");
-    let fechaCorteContable = new Date(fechaCorteContableInput + "-28");
-
-    let fechaProyeccion = new Date(fechaAdquisicion);
-    fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
-
-    if (fechaCorteContable < fechaProyeccion) {
-        cuerpoContable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-amber-400">El activo aún no empieza a depreciarse contablemente en esta fecha de corte.</td></tr>`;
-    } else {
-        while (fechaProyeccion <= fechaCorteContable) {
-            vLibros -= depMensualContable;
-            if (vLibros < 1) {
-                vLibros = 1.00;
+            if (!moi || !fechaAdqInput || moi <= 0) {
+                alert("Por favor captura datos válidos.");
+                return;
             }
 
-            let mesString = fechaProyeccion.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }).toUpperCase();
-            cuerpoContable.innerHTML += `
-                <tr class="hover:bg-slate-700 transition">
-                    <td class="p-2 border-b border-slate-700">${mesString}</td>
-                    <td class="p-2 border-b border-slate-700">${formateador.format(depMensualContable)}</td>
-                    <td class="p-2 border-b border-slate-700 font-semibold ${vLibros <= 1 ? 'text-amber-400' : 'text-slate-300'}">${formateador.format(vLibros)}</td>
-                </tr>
-            `;
-
-            if (vLibros === 1.00) {
-                break;
+            // 🧮 1. DEPRECIACIÓN CONTABLE
+            const fechaCorteContableInput = document.getElementById('fechaCorte').value;
+            if (!fechaCorteContableInput) {
+                alert("Por favor selecciona una fecha de corte.");
+                return;
             }
 
+            const depAnualContable = moi * porcentaje;
+            const depMensualContable = depAnualContable / 12;
+
+            document.getElementById('resAnuContable').innerText = formateador.format(depAnualContable);
+            document.getElementById('resMenContable').innerText = formateador.format(depMensualContable);
+
+            const cuerpoContable = document.getElementById('cuerpoContable');
+            cuerpoContable.innerHTML = '';
+
+            let vLibros = moi;
+            let fechaAdquisicion = new Date(fechaAdqInput + "-02");
+            let fechaCorteContable = new Date(fechaCorteContableInput + "-28");
+
+            let fechaProyeccion = new Date(fechaAdquisicion);
             fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
+
+            if (fechaCorteContable < fechaProyeccion) {
+                cuerpoContable.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-amber-600">El activo aún no empieza a depreciarse contablemente en esta fecha de corte.</td></tr>`;
+            } else {
+                while (fechaProyeccion <= fechaCorteContable) {
+                    vLibros -= depMensualContable;
+                    if (vLibros < 1) {
+                        vLibros = 1.00;
+                    }
+
+                    let mesString = fechaProyeccion.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' }).toUpperCase();
+                    cuerpoContable.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 border-b border-slate-200 text-slate-700">${mesString}</td>
+                            <td class="p-3 border-b border-slate-200 text-slate-800">${formateador.format(depMensualContable)}</td>
+                            <td class="p-3 border-b border-slate-200 font-semibold ${vLibros <= 1 ? 'text-amber-600' : 'text-slate-800'}">${formateador.format(vLibros)}</td>
+                        </tr>
+                    `;
+                    if (vLibros === 1.00) {
+                        break;
+                    }
+
+                    fechaProyeccion.setMonth(fechaProyeccion.getMonth() + 1);
+                }
+            }
+
+
+            // ⚖️ 2. DEDUCCIÓN DE INVERSIONES FISCAL
+            const fechaCorteInput = document.getElementById('fechaCorte').value;
+            if (!fechaCorteInput) {
+                alert("Por favor selecciona una fecha de corte.");
+                return;
+            }
+
+            let fechaAdq = new Date(fechaAdqInput + "-02");
+            let fechaCorte = new Date(fechaCorteInput + "-02");
+            let inicioUso = new Date(fechaAdqInput + "-02");
+            inicioUso.setMonth(inicioUso.getMonth() + 1);
+            
+            if (fechaCorte < inicioUso) {
+                alert("La fecha de corte no puede ser menor al inicio de uso del activo.");
+                return;
+            }
+
+            const anioCorte = fechaCorte.getFullYear();
+            let inicioEjercicio = new Date(anioCorte, 0, 1);
+            let fechaComparacionInicio = inicioUso > inicioEjercicio ? inicioUso : inicioEjercicio;
+            let mesesUsoEnAnio = (fechaCorte.getFullYear() - fechaComparacionInicio.getFullYear()) * 12 + (fechaCorte.getMonth() - fechaComparacionInicio.getMonth() + 1);
+            if (mesesUsoEnAnio > 12) mesesUsoEnAnio = 12;
+            if (mesesUsoEnAnio < 0) mesesUsoEnAnio = 0;
+
+            document.getElementById('resMesesUso').innerText = mesesUsoEnAnio;
+            if (mesesUsoEnAnio <= 0) {
+                alert("El activo no se utilizó en el ejercicio de la fecha de corte.");
+                return;
+            }
+
+            let mesMitadNumero = 0;
+            if (mesesUsoEnAnio % 2 === 0) {
+                mesMitadNumero = mesesUsoEnAnio / 2;
+            } else {
+                mesMitadNumero = Math.floor(mesesUsoEnAnio / 2);
+            }
+
+            let fechaMitad = new Date(fechaComparacionInicio);
+            fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
+
+            let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq);
+            let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
+
+            let mesDirectoMitadObj = formatearMesDirecto(fechaMitad);
+            let inpcMitadPublicado = baseINPC[mesDirectoMitadObj];
+
+            let factorAct = inpcMitadPublicado / inpcAdqPublicado;
+            if (factorAct < 1) {
+                factorAct = 1.0000;
+            } else {
+                factorAct = Math.floor(factorAct * 10000) / 10000;
+            }
+
+            let dedAnualFiscal = moi * porcentaje;
+            let proporcionUso = mesesUsoEnAnio / 12;
+            let dedEjercicioFinal = dedAnualFiscal * proporcionUso * factorAct;
+
+            document.getElementById('resFactor').innerText = factorAct.toFixed(4);
+            document.getElementById('resDeduccionFiscal').innerText = formateador.format(dedEjercicioFinal);
+
+            document.getElementById('valInpcAdq').innerText = inpcAdqPublicado;
+            document.getElementById('valMesMitad').innerText = mesDirectoMitadObj;
+            document.getElementById('valInpcMitad').innerText = inpcMitadPublicado;
+
+            document.getElementById('valMoiBase').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moi);
+            document.getElementById('valDedFinal').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(dedEjercicioFinal);
         }
-    }
 
+        function obtenerMesAnterior(dateObj) {
+            let temp = new Date(dateObj);
+            temp.setMonth(temp.getMonth() - 1);
+            let m = (temp.getMonth() + 1).toString().padStart(2, '0');
+            return `${temp.getFullYear()}-${m}`;
+        }
 
-    // ⚖️ 2. DEDUCCIÓN DE INVERSIONES FISCAL
-    const fechaCorteInput = document.getElementById('fechaCorte').value;
+        function formatearMesDirecto(dateObj) {
+            let temp = new Date(dateObj);
+            let m = (temp.getMonth() + 1).toString().padStart(2, '0');
+            return `${temp.getFullYear()}-${m}`;
+        }
 
-    if (!fechaCorteInput) {
-        alert("Por favor selecciona una fecha de corte.");
-        return;
-    }
+        function cambiarTab(tab) {
+            if (tab === 'contable') {
+                document.getElementById('tab-contable').classList.remove('hidden');
+                document.getElementById('tab-fiscal').classList.add('hidden');
+                document.getElementById('tab-contable-btn').classList.add('border-sky-600', 'text-sky-600', 'font-bold');
+                document.getElementById('tab-contable-btn').classList.remove('border-transparent', 'text-slate-500');
+                document.getElementById('tab-fiscal-btn').classList.add('border-transparent', 'text-slate-500');
+                document.getElementById('tab-fiscal-btn').classList.remove('border-sky-600', 'text-sky-600', 'font-bold');
+            } else {
+                document.getElementById('tab-fiscal').classList.remove('hidden');
+                document.getElementById('tab-contable').classList.add('hidden');
+                document.getElementById('tab-fiscal-btn').classList.add('border-sky-600', 'text-sky-600', 'font-bold');
+                document.getElementById('tab-fiscal-btn').classList.remove('border-transparent', 'text-slate-500');
+                document.getElementById('tab-contable-btn').classList.add('border-transparent', 'text-slate-500');
+                document.getElementById('tab-contable-btn').classList.remove('border-sky-600', 'text-sky-600', 'font-bold');
+            }
+        }
 
-    let fechaAdq = new Date(fechaAdqInput + "-02");
-    let fechaCorte = new Date(fechaCorteInput + "-02");
-    let inicioUso = new Date(fechaAdqInput + "-02");
-    inicioUso.setMonth(inicioUso.getMonth() + 1);
+        function limpiarFormulario() {
+            document.getElementById('nombre').value = '';
+            document.getElementById('moi').value = '';
+            document.getElementById('fecha').value = '';
+            document.getElementById('fechaCorte').value = '';
+            document.getElementById('porcentaje').selectedIndex = 0;
 
-    if (fechaCorte < inicioUso) {
-        alert("La fecha de corte no puede ser menor al inicio de uso del activo.");
-        return;
-    }
+            document.getElementById('resMenContable').innerText = "---";
+            document.getElementById('resAnuContable').innerText = "---";
+            document.getElementById('resMesesUso').innerText = "---";
+            document.getElementById('resFactor').innerText = "---";
+            document.getElementById('resDeduccionFiscal').innerText = "---";
 
-    const anioCorte = fechaCorte.getFullYear();
-    let inicioEjercicio = new Date(anioCorte, 0, 1);
-    let fechaComparacionInicio = inicioUso > inicioEjercicio ? inicioUso : inicioEjercicio;
-    let mesesUsoEnAnio = (fechaCorte.getFullYear() - fechaComparacionInicio.getFullYear()) * 12 + (fechaCorte.getMonth() - fechaComparacionInicio.getMonth() + 1);
-    if (mesesUsoEnAnio > 12) mesesUsoEnAnio = 12;
-    if (mesesUsoEnAnio < 0) mesesUsoEnAnio = 0;
+            document.getElementById('valInpcAdq').innerText = "---";
+            document.getElementById('valMesMitad').innerText = "---";
+            document.getElementById('valInpcMitad').innerText = "---";
+            document.getElementById('valMoiBase').innerText = "---";
+            document.getElementById('valDedFinal').innerText = "---";
 
-    document.getElementById('resMesesUso').innerText = mesesUsoEnAnio;
-    if (mesesUsoEnAnio <= 0) {
-        alert("El activo no se utilizó en el ejercicio de la fecha de corte.");
-        return;
-    }
+            document.getElementById('cuerpoContable').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Calcula para ver datos...</td></tr>`;
+        }
 
-    let mesMitadNumero = 0;
-    if (mesesUsoEnAnio % 2 === 0) {
-        mesMitadNumero = mesesUsoEnAnio / 2;
-    } else {
-        mesMitadNumero = Math.floor(mesesUsoEnAnio / 2);
-    }
+        function descargarExcelDepreciacion() {
+            const nombreActivo = document.getElementById('nombre').value || "Activo Sin Nombre";
+            const moi = parseFloat(document.getElementById('moi').value) || 0;
+            const fechaAdq = document.getElementById('fecha').value; 
+            const fechaCorte = document.getElementById('fechaCorte').value;
 
-    let fechaMitad = new Date(fechaComparacionInicio);
-    fechaMitad.setMonth(fechaComparacionInicio.getMonth() + (mesMitadNumero - 1));
+            const selectPorcentaje = document.getElementById('porcentaje');
+            const porcentajeTexto = selectPorcentaje.options[selectPorcentaje.selectedIndex].text;
 
-    let mesAnteriorAdqObj = obtenerMesAnterior(fechaAdq);
-    let inpcAdqPublicado = baseINPC[mesAnteriorAdqObj];
+            if (moi <= 0) {
+                alert("Por favor, captura un MOI válido y calcula antes de descargar.");
+                return;
+            }
 
-    let mesDirectoMitadObj = formatearMesDirecto(fechaMitad);
-    let inpcMitadPublicado = baseINPC[mesDirectoMitadObj];
+            const mesesUso = document.getElementById('resMesesUso').innerText;
+            const factorAct = document.getElementById('resFactor').innerText;
+            const deduccionFiscal = document.getElementById('resDeduccionFiscal').innerText;
+            const inpcAdq = document.getElementById('valInpcAdq').innerText;
+            const mesMitad = document.getElementById('valMesMitad').innerText;
+            const inpcMitad = document.getElementById('valInpcMitad').innerText;
+            const deduccionFinal = document.getElementById('valDedFinal').innerText;
 
-    let factorAct = inpcMitadPublicado / inpcAdqPublicado;
-    if (factorAct < 1) {
-        factorAct = 1.0000;
-    } else {
-        factorAct = Math.floor(factorAct * 10000) / 10000;
-    }
+            const reporte = [
+                ["🧾 REPORTE DE DEDUCCIÓN DE INVERSIONES FISCAL"],
+                [],
+                ["DATOS DEL ACTIVO", "VALOR"],
+                ["Nombre del Activo", nombreActivo],
+                ["Monto Original de la Inversión (MOI)", moi],
+                ["Tasa de Depreciación Anual", porcentajeTexto],
+                ["Fecha de Adquisición", fechaAdq],
+                ["Fecha de Corte / Último mes de uso", fechaCorte],
+                [],
+                ["📊 CÁLCULO DEL FACTOR DE ACTUALIZACIÓN"],
+                ["INPC Adquisición (Mes anterior publicado)", inpcAdq],
+                ["Mes de la Mitad del Periodo de Uso", mesMitad],
+                ["INPC Mitad del Periodo (Mes anterior publicado)", inpcMitad],
+                ["Factor de Actualización (CFF Art 17-A)", factorAct],
+                [],
+                ["📉 RESULTADOS DEL EJERCICIO"],
+                ["Meses de Uso en el Ejercicio", mesesUso],
+                ["Deducción Fiscal del Ejercicio", deduccionFiscal],
+                ["Deducción Final Actualizada", deduccionFinal],
+                [],
+                ["Reporte generado por el portafolio de Diego Suárez."]
+            ];
 
-    let dedAnualFiscal = moi * porcentaje;
-    let proporcionUso = mesesUsoEnAnio / 12;
-    let dedEjercicioFinal = dedAnualFiscal * proporcionUso * factorAct;
+            const libro = XLSX.utils.book_new();
+            const hoja = XLSX.utils.aoa_to_sheet(reporte);
 
-    document.getElementById('resFactor').innerText = factorAct.toFixed(4);
-    document.getElementById('resDeduccionFiscal').innerText = formateador.format(dedEjercicioFinal);
-
-    document.getElementById('valInpcAdq').innerText = inpcAdqPublicado;
-    document.getElementById('valMesMitad').innerText = mesDirectoMitadObj; 
-    document.getElementById('valInpcMitad').innerText = inpcMitadPublicado;
-
-    document.getElementById('valMoiBase').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moi);
-    document.getElementById('valDedFinal').innerText = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(dedEjercicioFinal);
-} // 👈 ¡AQUÍ ESTABA LA LLAVE DE CIERRE QUE FALTABA!
-
-function obtenerMesAnterior(dateObj) {
-    let temp = new Date(dateObj);
-    temp.setMonth(temp.getMonth() - 1);
-    let m = (temp.getMonth() + 1).toString().padStart(2, '0');
-    return `${temp.getFullYear()}-${m}`;
-}
-
-function formatearMesDirecto(dateObj) {
-    let temp = new Date(dateObj);
-    let m = (temp.getMonth() + 1).toString().padStart(2, '0');
-    return `${temp.getFullYear()}-${m}`;
-}
-
-function cambiarTab(tab) {
-    if (tab === 'contable') {
-        document.getElementById('tab-contable').classList.remove('hidden');
-        document.getElementById('tab-fiscal').classList.add('hidden');
-        document.getElementById('tab-contable-btn').classList.add('border-sky-500', 'text-sky-400');
-        document.getElementById('tab-contable-btn').classList.remove('border-transparent', 'text-slate-400');
-        document.getElementById('tab-fiscal-btn').classList.add('border-transparent', 'text-slate-400');
-        document.getElementById('tab-fiscal-btn').classList.remove('border-sky-500', 'text-sky-400');
-    } else {
-        document.getElementById('tab-fiscal').classList.remove('hidden');
-        document.getElementById('tab-contable').classList.add('hidden');
-        document.getElementById('tab-fiscal-btn').classList.add('border-sky-500', 'text-sky-400');
-        document.getElementById('tab-fiscal-btn').classList.remove('border-transparent', 'text-slate-400');
-        document.getElementById('tab-contable-btn').classList.add('border-transparent', 'text-slate-400');
-        document.getElementById('tab-contable-btn').classList.remove('border-sky-500', 'text-sky-400');
-    }
-}
-
-function limpiarFormulario() {
-    document.getElementById('nombre').value = '';
-    document.getElementById('moi').value = '';
-    document.getElementById('fecha').value = '';
-    document.getElementById('fechaCorte').value = '';
-    document.getElementById('porcentaje').selectedIndex = 0;
-
-    document.getElementById('resMenContable').innerText = "---";
-    document.getElementById('resAnuContable').innerText = "---";
-
-    document.getElementById('resMesesUso').innerText = "---";
-    document.getElementById('resFactor').innerText = "---";
-    document.getElementById('resDeduccionFiscal').innerText = "---";
-
-    document.getElementById('valInpcAdq').innerText = "---";
-    document.getElementById('valMesMitad').innerText = "---";
-    document.getElementById('valInpcMitad').innerText = "---";
-    document.getElementById('valMoiBase').innerText = "---";
-    document.getElementById('valDedFinal').innerText = "---";
-
-    document.getElementById('cuerpoContable').innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500">Ingresa los datos para generar la proyección.</td></tr>`;
-}
-
-function descargarExcelDepreciacion() {
-    const nombreActivo = document.getElementById('nombre').value || "Activo Sin Nombre";
-    const moi = parseFloat(document.getElementById('moi').value) || 0;
-    const fechaAdq = document.getElementById('fecha').value; 
-    const fechaCorte = document.getElementById('fechaCorte').value;
-
-    const selectPorcentaje = document.getElementById('porcentaje');
-    const porcentajeTexto = selectPorcentaje.options[selectPorcentaje.selectedIndex].text;
-
-    if (moi <= 0) {
-        alert("Por favor, captura un MOI válido y calcula antes de descargar.");
-        return;
-    }
-
-    const mesesUso = document.getElementById('resMesesUso').innerText;
-    const factorAct = document.getElementById('resFactor').innerText;
-    const deduccionFiscal = document.getElementById('resDeduccionFiscal').innerText;
-    
-    const inpcAdq = document.getElementById('valInpcAdq').innerText;
-    const mesMitad = document.getElementById('valMesMitad').innerText;
-    const inpcMitad = document.getElementById('valInpcMitad').innerText;
-    const deduccionFinal = document.getElementById('valDedFinal').innerText;
-
-    const reporte = [
-        ["🧾 REPORTE DE DEDUCCIÓN DE INVERSIONES FISCAL"],
-        [],
-        ["DATOS DEL ACTIVO", "VALOR"],
-        ["Nombre del Activo", nombreActivo],
-        ["Monto Original de la Inversión (MOI)", moi],
-        ["Tasa de Depreciación Anual", porcentajeTexto],
-        ["Fecha de Adquisición", fechaAdq],
-        ["Fecha de Corte / Último mes de uso", fechaCorte],
-        [],
-        ["📊 CÁLCULO DEL FACTOR DE ACTUALIZACIÓN"],
-        ["INPC Adquisición (Mes anterior publicado)", inpcAdq],
-        ["Mes de la Mitad del Periodo de Uso", mesMitad],
-        ["INPC Mitad del Periodo (Mes anterior publicado)", inpcMitad],
-        ["Factor de Actualización (CFF Art 17-A)", factorAct],
-        [],
-        ["📉 RESULTADOS DEL EJERCICIO"],
-        ["Meses de Uso en el Ejercicio", mesesUso],
-        ["Deducción Fiscal del Ejercicio", deduccionFiscal],
-        ["Deducción Final Actualizada", deduccionFinal],
-        [],
-        ["Reporte generado por el portafolio de Diego Suárez."]
-    ];
-
-    const libro = XLSX.utils.book_new();
-    const hoja = XLSX.utils.aoa_to_sheet(reporte);
-
-    hoja['!cols'] = [{ wch: 45 }, { wch: 25 }]; 
-
-    XLSX.utils.book_append_sheet(libro, hoja, "Depreciación Fiscal");
-    XLSX.writeFile(libro, `Reporte_Depreciacion_${nombreActivo.replace(/\s+/g, '_')}.xlsx`);
-}        
+            hoja['!cols'] = [{ wch: 45 }, { wch: 25 }];
+            XLSX.utils.book_append_sheet(libro, hoja, "Depreciación Fiscal");
+            XLSX.writeFile(libro, `Reporte_Depreciacion_${nombreActivo.replace(/\s+/g, '_')}.xlsx`);
+        }        
     </script>
-
 </body>
 </html>
