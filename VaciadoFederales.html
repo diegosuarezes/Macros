@@ -186,60 +186,55 @@
             }
         }
 
-        function procesarTextoFiscal(texto) {
-            try {
-                const textoLimpio = texto.replace(/\s+/g, ' ');
+// --- 🧠 Procesador Fiscal Inteligente (Blindado para desorden del SAT) ---
+function procesarTextoFiscal(texto) {
+    try {
+        const textoLimpio = texto.replace(/\s+/g, ' ');
 
-                const rfcMatch = textoLimpio.match(/RFC:\s*([A-Z0-9]{12,13})/i);
-                const rfc = rfcMatch ? rfcMatch[1] : "N/A";
+        // 🟢 1. Busca cualquier patrón de RFC válido de 12 o 13 caracteres en todo el texto
+        const rfcRegex = /([A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3})/i;
+        const rfcMatch = textoLimpio.match(rfcRegex);
+        const rfc = rfcMatch ? rfcMatch[1].toUpperCase() : "N/A";
 
-                const razonMatch = textoLimpio.match(/Denominación o razón social:\s*([^Tipo\d]+)/i);
-                const razonSocial = razonMatch ? razonMatch[1].trim() : "N/A";
+        // 🟢 2. Busca el nombre de la empresa rastreando el régimen societario (SA de CV, etc.)
+        let razonSocial = "N/A";
+        const razonRegex = /([A-Z0-9Ñ&. ]+ (?:S\.?A\.? DE C\.?V\.?|S\.? DE R\.?L\.?|S\.?C\.?|A\.?C\.?))/i;
+        const razonMatch = textoLimpio.match(razonRegex);
+        if (razonMatch) {
+            razonSocial = razonMatch[1].trim().toUpperCase();
+        }
 
-                const ejercicioMatch = textoLimpio.match(/Ejercicio:\s*(\d{4})/i);
-                const ejercicio = ejercicioMatch ? ejercicioMatch[1] : "N/A";
+        const ejercicioMatch = textoLimpio.match(/Ejercicio:\s*(\d{4})/i);
+        const ejercicio = ejercicioMatch ? ejercicioMatch[1] : "N/A";
 
-                const periodoMatch = textoLimpio.match(/Período de la declaración:\s*([A-Za-z]+)/i);
-                const periodo = periodoMatch ? periodoMatch[1] : "N/A";
+        const periodoMatch = textoLimpio.match(/Período de la declaración:\s*([A-Za-z]+)/i);
+        const periodo = periodoMatch ? periodoMatch[1] : "N/A";
 
-                const tipoMatch = textoLimpio.match(/Tipo de declaración:\s*([A-Za-z]+)/i);
-                let tipoDecl = tipoMatch ? tipoMatch[1] : "Normal";
-                if (textoLimpio.includes("Complementaria")) {
-                    tipoDecl = "Complementaria";
-                }
+        const tipoMatch = textoLimpio.match(/Tipo de declaración:\s*([A-Za-z]+)/i);
+        let tipoDecl = tipoMatch ? tipoMatch[1] : "Normal";
+        if (textoLimpio.includes("Complementaria")) {
+            tipoDecl = "Complementaria";
+        }
 
-                const fechaPresMatch = textoLimpio.match(/Fecha y hora de presentación:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2})/i);
-                const fechaPresentacion = fechaPresMatch ? fechaPresMatch[1] : "N/A";
+        const fechaPresMatch = textoLimpio.match(/Fecha y hora de presentación:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2})/i);
+        const fechaPresentacion = fechaPresMatch ? fechaPresMatch[1] : "N/A";
 
-                const operacionMatch = textoLimpio.match(/Número de operación:\s*(\d+)/i);
-                const numeroOperacion = operacionMatch ? operacionMatch[1] : "N/A";
+        const operacionMatch = textoLimpio.match(/Número de operación:\s*(\d+)/i);
+        const numeroOperacion = operacionMatch ? operacionMatch[1] : "N/A";
 
-                const bancoMatch = textoLimpio.match(/Institución de crédito:\s*([^Línea]+)/i);
-                const banco = bancoMatch ? bancoMatch[1].trim() : "N/A";
-
-                const lineaMatch = textoLimpio.match(/Línea de Capture:\s*([\d\sA-Z]{18,25})/i) || textoLimpio.match(/Línea de\s*Captura:\s*([\d\sA-Z]{18,25})/i);
-                const lineaCaptura = lineaMatch ? lineaMatch[1].trim() : "N/A";
-
-                const fechaPagoMatch = textoLimpio.match(/Fecha del\s*pago:\s*(\d{2}\/\d{2}\/\d{4})/i);
-                const fechaPago = fechaPagoMatch ? fechaPagoMatch[1] : "N/A";
-
-                const opBancoMatch = textoLimpio.match(/No\. de\s*Operación:\s*(\d+)/i);
-                const opBanco = opBancoMatch ? opBancoMatch[1] : "N/A";
-
-                const importeTotalMatch = textoLimpio.match(/Importe total a pagar:\s*\$?\s*([0-9,.]+)/i) || textoLimpio.match(/Importe pagado:\s*\$?\s*([0-9,.]+)/i);
-                const importeTotal = importeTotalMatch ? parseMoney(importeTotalMatch[1]) : 0;
-
-                const delimitadoresBusqueda = [
-                    "isr personas morales", 
-                    "impuesto al valor agregado", 
-                    "iva retenciones", 
-                    "isr retenciones por salarios",
-                    "isr retenciones por asimilados a salarios", 
-                    "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
-                    "isr por pagos por cuenta de terceros",
-                    "isr personas fisicas. actividad empresarial y profesional",
-                    "impuesto al valor agregado. personas fisicas"
-                ];
+        // --- ✂️ DIVISIÓN POR BLOQUES DE IMPUESTOS ---
+        const delimitadoresBusqueda = [
+            "isr personas morales", 
+            "impuesto al valor agregado", 
+            "iva retenciones", 
+            "isr retenciones por salarios",
+            "isr retenciones por asimilados a salarios", 
+            "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
+            "isr por pagos por cuenta de terceros",
+            "isr personas fisicas. actividad empresarial y profesional",
+            "impuesto al valor agregado. personas fisicas",
+            "impuesto al valor agregado. personas morales"
+        ];
 
                 const textoNormalizado = textoLimpio.toLowerCase()
                     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
