@@ -23,9 +23,6 @@
                 </h1>
                 <p class="text-slate-500 text-xs">Pruebas locales del extractor de impuestos.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">LECTOR LOCAL</span>
-            </div>
         </div>
     </header>
 
@@ -79,11 +76,10 @@
             </div>
 
             <div class="flex-1 overflow-auto">
-                <table class="w-full text-xs text-left text-slate-700 border-collapse min-w-[2200px]">
+                <table class="w-full text-xs text-left text-slate-700 border-collapse min-w-[2000px]">
                     <thead class="sticky top-0 bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 z-10">
                         <tr>
                             <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">RFC</th>
-                            <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Razón Social</th>
                             <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Ejerc.</th>
                             <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Periodo</th>
                             <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">Tipo Decl.</th>
@@ -186,55 +182,63 @@
             }
         }
 
-// --- 🧠 Procesador Fiscal Inteligente (Blindado para desorden del SAT) ---
-function procesarTextoFiscal(texto) {
-    try {
-        const textoLimpio = texto.replace(/\s+/g, ' ');
+        function procesarTextoFiscal(texto) {
+            try {
+                const textoLimpio = texto.replace(/\s+/g, ' ');
 
-        // 🟢 1. Busca cualquier patrón de RFC válido de 12 o 13 caracteres en todo el texto
-        const rfcRegex = /([A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3})/i;
-        const rfcMatch = textoLimpio.match(rfcRegex);
-        const rfc = rfcMatch ? rfcMatch[1].toUpperCase() : "N/A";
+                let rfc = "N/A";
+                const rfcMatch = textoLimpio.match(/([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})/i);
+                if (rfcMatch) {
+                    rfc = rfcMatch[1].toUpperCase();
+                } else {
+                    throw new Error("No se encontró un RFC válido.");
+                }
 
-        // 🟢 2. Busca el nombre de la empresa rastreando el régimen societario (SA de CV, etc.)
-        let razonSocial = "N/A";
-        const razonRegex = /([A-Z0-9Ñ&. ]+ (?:S\.?A\.? DE C\.?V\.?|S\.? DE R\.?L\.?|S\.?C\.?|A\.?C\.?))/i;
-        const razonMatch = textoLimpio.match(razonRegex);
-        if (razonMatch) {
-            razonSocial = razonMatch[1].trim().toUpperCase();
-        }
+                const ejercicioMatch = textoLimpio.match(/Ejercicio:\s*(\d{4})/i);
+                const ejercicio = ejercicioMatch ? ejercicioMatch[1] : "N/A";
 
-        const ejercicioMatch = textoLimpio.match(/Ejercicio:\s*(\d{4})/i);
-        const ejercicio = ejercicioMatch ? ejercicioMatch[1] : "N/A";
+                const periodoMatch = textoLimpio.match(/Período de la declaración:\s*([A-Za-z]+)/i);
+                const periodo = periodoMatch ? periodoMatch[1] : "N/A";
 
-        const periodoMatch = textoLimpio.match(/Período de la declaración:\s*([A-Za-z]+)/i);
-        const periodo = periodoMatch ? periodoMatch[1] : "N/A";
+                const tipoMatch = textoLimpio.match(/Tipo de declaración:\s*([A-Za-z]+)/i);
+                let tipoDecl = tipoMatch ? tipoMatch[1] : "Normal";
+                if (textoLimpio.includes("Complementaria")) {
+                    tipoDecl = "Complementaria";
+                }
 
-        const tipoMatch = textoLimpio.match(/Tipo de declaración:\s*([A-Za-z]+)/i);
-        let tipoDecl = tipoMatch ? tipoMatch[1] : "Normal";
-        if (textoLimpio.includes("Complementaria")) {
-            tipoDecl = "Complementaria";
-        }
+                const fechaPresMatch = textoLimpio.match(/Fecha y hora de presentación:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2})/i);
+                const fechaPresentacion = fechaPresMatch ? fechaPresMatch[1] : "N/A";
 
-        const fechaPresMatch = textoLimpio.match(/Fecha y hora de presentación:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2})/i);
-        const fechaPresentacion = fechaPresMatch ? fechaPresMatch[1] : "N/A";
+                const operacionMatch = textoLimpio.match(/Número de operación:\s*(\d+)/i);
+                const numeroOperacion = operacionMatch ? operacionMatch[1] : "N/A";
 
-        const operacionMatch = textoLimpio.match(/Número de operación:\s*(\d+)/i);
-        const numeroOperacion = operacionMatch ? operacionMatch[1] : "N/A";
+                const bancoMatch = textoLimpio.match(/Institución de crédito:\s*([^Línea]+)/i);
+                const banco = bancoMatch ? bancoMatch[1].trim() : "N/A";
 
-        // --- ✂️ DIVISIÓN POR BLOQUES DE IMPUESTOS ---
-        const delimitadoresBusqueda = [
-            "isr personas morales", 
-            "impuesto al valor agregado", 
-            "iva retenciones", 
-            "isr retenciones por salarios",
-            "isr retenciones por asimilados a salarios", 
-            "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
-            "isr por pagos por cuenta de terceros",
-            "isr personas fisicas. actividad empresarial y profesional",
-            "impuesto al valor agregado. personas fisicas",
-            "impuesto al valor agregado. personas morales"
-        ];
+                const lineaMatch = textoLimpio.match(/Línea de Capture:\s*([\d\sA-Z]{18,25})/i) || textoLimpio.match(/Línea de\s*Captura:\s*([\d\sA-Z]{18,25})/i);
+                const lineaCaptura = lineaMatch ? lineaMatch[1].trim() : "N/A";
+
+                const fechaPagoMatch = textoLimpio.match(/Fecha del\s*pago:\s*(\d{2}\/\d{2}\/\d{4})/i);
+                const fechaPago = fechaPagoMatch ? fechaPagoMatch[1] : "N/A";
+
+                const opBancoMatch = textoLimpio.match(/No\. de\s*Operación:\s*(\d+)/i);
+                const opBanco = opBancoMatch ? opBancoMatch[1] : "N/A";
+
+                const importeTotalMatch = textoLimpio.match(/Importe total a pagar:\s*\$?\s*([0-9,.]+)/i) || textoLimpio.match(/Importe pagado:\s*\$?\s*([0-9,.]+)/i);
+                const importeTotal = importeTotalMatch ? parseMoney(importeTotalMatch[1]) : 0;
+
+                const delimitadoresBusqueda = [
+                    "isr personas morales", 
+                    "impuesto al valor agregado", 
+                    "iva retenciones", 
+                    "isr retenciones por salarios",
+                    "isr retenciones por asimilados a salarios", 
+                    "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
+                    "isr por pagos por cuenta de terceros",
+                    "isr personas fisicas. actividad empresarial y profesional",
+                    "impuesto al valor agregado. personas fisicas",
+                    "impuesto al valor agregado. personas morales"
+                ];
 
                 const textoNormalizado = textoLimpio.toLowerCase()
                     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -251,7 +255,7 @@ function procesarTextoFiscal(texto) {
                 bloquesIndices.sort((a, b) => a.index - b.index);
 
                 if (bloquesIndices.length === 0) {
-                    insertarRegistro(rfc, razonSocial, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, "No reconocido automáticamente", 0, 0, 0, 0, 0, lineaCaptura, importeTotal, fechaPago, banco, opBanco);
+                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, "No reconocido automáticamente", 0, 0, 0, 0, 0, lineaCaptura, importeTotal, fechaPago, banco, opBanco);
                     return;
                 }
 
@@ -275,12 +279,11 @@ function procesarTextoFiscal(texto) {
                     let pagoMatch = fragmento.match(/Cantidad a pagar:\s*([0-9,]+)/i);
                     let cantPagar = pagoMatch ? parseMoney(pagoMatch[1]) : 0;
 
-                    if (cargo === 0 && cantPagar === 0 && compensacion === 0) continue;
-
+                    // 🛠️ Quitado el filtro de ceros para reportar todo el cumplimiento presentado
                     let totalFila = importeTotal > 0 ? importeTotal : cantPagar;
                     const nombreFormateado = bloquesIndices[i].tipoOriginal.toUpperCase();
 
-                    insertarRegistro(rfc, razonSocial, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
+                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
                 }
             } catch (err) {
                 logError(`Error procesando los datos internos del PDF.`);
@@ -292,9 +295,9 @@ function procesarTextoFiscal(texto) {
             return parseFloat(text.replace(/[^0-9.-]+/g, '')) || 0;
         }
 
-        function insertarRegistro(rfc, rs, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
+        function insertarRegistro(rfc, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
             baseDatosImpuestos.push({
-                rfc, rs, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
+                rfc, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
             });
         }
 
@@ -315,13 +318,11 @@ function procesarTextoFiscal(texto) {
             const format = (val) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
 
             baseDatosImpuestos.forEach((d) => {
-                // Fila resaltada si el cargo fue absorbido por compensación
-                const filaClase = d.pagar === 0 && d.cargo > 0 ? "bg-indigo-50/50" : "hover:bg-slate-50 transition";
+                const filaClase = d.pagar === 0 && d.cargo > 0 ? "bg-indigo-50" : "hover:bg-slate-50 transition";
                 
                 tbody.innerHTML += `
                     <tr class="${filaClase}">
                         <td class="p-3 font-mono text-slate-900">${d.rfc}</td>
-                        <td class="p-3 truncate max-w-xs text-slate-800">${d.rs}</td>
                         <td class="p-3 text-slate-700">${d.ej}</td>
                         <td class="p-3 text-slate-700">${d.per}</td>
                         <td class="p-3 text-slate-700">${d.tip}</td>
@@ -365,7 +366,6 @@ function procesarTextoFiscal(texto) {
 
             const excelMapeado = baseDatosImpuestos.map(d => ({
                 "RFC": d.rfc,
-                "Razón Social": d.rs,
                 "Ejercicio": d.ej,
                 "Periodo": d.per,
                 "Tipo Declaración": d.tip,
