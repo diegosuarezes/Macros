@@ -87,7 +87,8 @@
                             <th class="p-3 bg-slate-100 border-r border-slate-200 text-indigo-700">No. Operación SAT</th>
 
                             <th class="p-3 bg-slate-50 text-emerald-700 border-l border-slate-200">Concepto de Impuesto</th>
-                            <th class="p-3 bg-slate-50 text-emerald-700 text-right">Impuesto Cargo</th>
+                            <th class="p-3 bg-slate-50 text-emerald-700 text-right">Impuesto a Cargo</th>
+                            <th class="p-3 bg-slate-50 text-emerald-700 text-right">Saldo a Favor</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Actualización</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Recargos</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Compensación</th>
@@ -235,7 +236,9 @@
                     "isr retenciones por asimilados a salarios", 
                     "isr retenciones por servicios profesionales/regimen simplificado de confianza", 
                     "isr por pagos por cuenta de terceros",
-                    "isr personas fisicas. actividad empresarial y profesional"
+                    "isr personas fisicas. actividad empresarial y profesional",
+                    "isr simplificado de confianza",
+                    "iva simplificado de confianza"
                 ];
 
                 const textoNormalizado = textoLimpio.toLowerCase()
@@ -264,6 +267,11 @@
 
                     let cargoMatch = fragmento.match(/A cargo:\s*([0-9,]+)/i) || fragmento.match(/Impuesto a cargo:\s*([0-9,]+)/i) || fragmento.match(/Cantidad a cargo:\s*([0-9,]+)/i);
                     let cargo = cargoMatch ? parseMoney(cargoMatch[1]) : 0;
+                     
+
+                    let sFavorMatch = fragmento.match(/Saldo a favor:\s*([0-9,]+)/i) || fragmento.match(/A favor:\s*([0-9,]+)/i);
+                    let saldoFavor = sFavorMatch ? parseMoney(sFavorMatch[1]) : 0;
+
 
                     let actMatch = fragmento.match(/Parte actualizada:\s*([0-9,]+)/i);
                     let actualizacion = actMatch ? parseMoney(actMatch[1]) : 0;
@@ -281,7 +289,7 @@
                     let totalFila = importeTotal > 0 ? importeTotal : cantPagar;
                     const nombreFormateado = bloquesIndices[i].tipoOriginal.toUpperCase();
 
-                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
+                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, saldoFavor, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
                 }
             } catch (err) {
                 logError(`Error procesando los datos internos del PDF.`);
@@ -293,9 +301,9 @@
             return parseFloat(text.replace(/[^0-9.-]+/g, '')) || 0;
         }
 
-        function insertarRegistro(rfc, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
+        function insertarRegistro(rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
             baseDatosImpuestos.push({
-                rfc, ej, per, tip, fPres, op, impNombre, cargo, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
+                rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
             });
         }
 
@@ -329,6 +337,7 @@
 
                         <td class="p-3 font-semibold text-slate-900 border-l border-slate-200">${d.impNombre}</td>
                         <td class="p-3 text-right font-mono text-slate-800">${format(d.cargo)}</td>
+                        <td class="p-3 text-right font-mono ${d.sFavor > 0 ? 'text-sky-600' : 'text-slate-800'}">${format(d.sFavor)}</td>
                         <td class="p-3 text-right font-mono text-slate-800">${format(d.act)}</td>
                         <td class="p-3 text-right font-mono text-slate-800">${format(d.rec)}</td>
                         <td class="p-3 text-right font-mono ${d.comp > 0 ? 'text-rose-600' : 'text-slate-800'}">${d.comp > 0 ? '-' + format(d.comp) : '$0.00'}</td>
@@ -371,6 +380,7 @@
                 "No. Operación SAT": d.op,
                 "Concepto Impuesto": d.impNombre,
                 "Impuesto Cargo": d.cargo,
+                "Saldo a Favor": d.sFavor,
                 "Actualización": d.act,
                 "Recargos": d.rec,
                 "Compensación": d.comp > 0 ? -d.comp : 0,
