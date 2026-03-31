@@ -92,6 +92,7 @@
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Actualización</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Recargos</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Compensación</th>
+                            <th class="p-3 bg-slate-50 text-emerald-700 text-right">Pago Anterior</th>
                             <th class="p-3 bg-slate-50 text-emerald-700 text-right">Cant. a Pagar</th>
 
                             <th class="p-3 bg-slate-100 border-l border-slate-200 text-sky-700">Línea de Captura</th>
@@ -282,6 +283,10 @@
                     let compMatch = fragmento.match(/Compensaciones:\s*([0-9,]+)/i) || fragmento.match(/Saldo a aplicar\s*([0-9,]+)/i);
                     let compensacion = compMatch ? parseMoney(compMatch[1]) : 0;
 
+                    let pAntMatch = fragmento.match(/Monto pagado con anterioridad:\s*([0-9,]+)/i) || fragmento.match(/Cantidad pagada con anterioridad:\s*([0-9,]+)/i);
+                    let pagoAnterior = pAntMatch ? parseMoney(pAntMatch[1]) : 0;
+
+
                     let pagoMatch = fragmento.match(/Cantidad a pagar:\s*([0-9,]+)/i);
                     let cantPagar = pagoMatch ? parseMoney(pagoMatch[1]) : 0;
 
@@ -289,7 +294,7 @@
                     let totalFila = importeTotal > 0 ? importeTotal : cantPagar;
                     const nombreFormateado = bloquesIndices[i].tipoOriginal.toUpperCase();
 
-                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, saldoFavor, actualizacion, recargos, compensacion, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
+                    insertarRegistro(rfc, ejercicio, periodo, tipoDecl, fechaPresentacion, numeroOperacion, nombreFormateado, cargo, saldoFavor, actualizacion, recargos, compensacion, pagoAnterior, cantPagar, lineaCaptura, totalFila, fechaPago, banco, opBanco);
                 }
             } catch (err) {
                 logError(`Error procesando los datos internos del PDF.`);
@@ -301,11 +306,11 @@
             return parseFloat(text.replace(/[^0-9.-]+/g, '')) || 0;
         }
 
-        function insertarRegistro(rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan) {
-            baseDatosImpuestos.push({
-                rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagar, lc, impTotal, fPago, ban, opBan
-            });
-        }
+function insertarRegistro(rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagoAnt, pagar, lc, impTotal, fPago, ban, opBan) {
+    baseDatosImpuestos.push({
+        rfc, ej, per, tip, fPres, op, impNombre, cargo, sFavor, act, rec, comp, pagoAnt, pagar, lc, impTotal, fPago, ban, opBan
+    });
+}
 
         function renderizarTabla() {
             const tbody = document.getElementById('tablaResultados');
@@ -341,6 +346,7 @@
                         <td class="p-3 text-right font-mono text-slate-800">${format(d.act)}</td>
                         <td class="p-3 text-right font-mono text-slate-800">${format(d.rec)}</td>
                         <td class="p-3 text-right font-mono ${d.comp > 0 ? 'text-rose-600' : 'text-slate-800'}">${d.comp > 0 ? '-' + format(d.comp) : '$0.00'}</td>
+                        <td class="p-3 text-right font-mono text-slate-800">${format(d.pagoAnt)}</td>
                         <td class="p-3 text-right font-mono ${d.pagar > 0 ? 'text-emerald-600' : 'text-slate-500'}">${format(d.pagar)}</td>
 
                         <td class="p-3 font-mono border-l border-slate-200 text-slate-800">${d.lc}</td>
@@ -384,6 +390,7 @@
                 "Actualización": d.act,
                 "Recargos": d.rec,
                 "Compensación": d.comp > 0 ? -d.comp : 0,
+                "Pago Anterior": d.pagoAnt,
                 "Cant. a Pagar": d.pagar,
                 "Línea de Captura": d.lc,
                 "Importe Total Pagado": d.impTotal,
