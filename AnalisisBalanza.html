@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría Rápida</title>
+    <title>Puntuación de Salud Financiera</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -37,11 +37,11 @@
                 <i class="fa-solid fa-file-invoice-dollar text-3xl"></i>
             </div>
             <h3 class="text-slate-800 font-extrabold text-xl mb-2">Analizar Balanza</h3>
-            <p class="text-slate-500 text-sm font-medium">Suelta el archivo aquí para procesar niveles y RIF</p>
+            <p class="text-slate-500 text-sm font-medium">Arrastra tu Balanza de Comprobación en Excel</p>
             <input type="file" id="inputExcel" accept=".xlsx, .xls, .csv" class="hidden" onchange="analizarBalanza(this.files[0])">
         </div>
 
-        <div id="dashboard" class="hidden space-y-10 animate-in fade-in duration-500">
+        <div id="dashboard" class="hidden space-y-10">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="app-card p-10 flex flex-col items-center">
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8">Margen Neto</p>
@@ -65,13 +65,35 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="app-card p-6 border-l-4 border-amber-400">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Prueba del Ácido</p>
+                    <span id="txtAcid" class="text-3xl font-black text-slate-800">0.00</span>
+                </div>
+                <div class="app-card p-6 border-l-4 border-emerald-400">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cap. Trabajo</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">(Total Activo Circulante - Total Pasico a Corto Plazo</p>
+                    <span id="txtCapTrabajo" class="text-2xl font-black text-slate-800">$0.00</span>
+                </div>
+                <div class="app-card p-6 border-l-4 border-indigo-400">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">ROA</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">(Utilidad Operativa / Total Activo</p>
+                    <span id="txtROA" class="text-3xl font-black text-slate-800">0.0%</span>
+                </div>
+                <div class="app-card p-6 border-l-4 border-rose-400">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Apalancamiento</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">(Total Pasivo / Total Activo</p>
+                    <span id="txtLeverage" class="text-3xl font-black text-slate-800">0.0%</span>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div class="app-card p-10">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Reporte de Resultados</h3>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Estructura de Resultados</h3>
                     <div id="resumenEstructura" class="space-y-4"></div>
                 </div>
                 <div class="app-card p-10 flex flex-col">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Composición</h3>
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Composición de Costos</h3>
                     <div class="flex-1 min-h-[300px]"><canvas id="mixChart"></canvas></div>
                 </div>
             </div>
@@ -86,72 +108,121 @@
             if(!file) return;
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data);
-            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            let d = { ing: 0, descV: 0, costV: 0, descC: 0, gastG: 0, rifG: 0, rifI: 0, discG: 0, discI: 0 };
-            let empresa = json[0][0] || "Entidad Analizada";
+            const empresa = json[0][0] || "Empresa";
+            const filaIndex = json.findIndex(row => String(row[0]).toLowerCase().includes('cuenta')) + 1;
+            const dataRows = json.slice(filaIndex);
+
+            let ejemploCta = dataRows.find(row => String(row[0]).includes('-'))?.[0] || "";
+            let niveles = ejemploCta.split('-').length; 
 
             const esMayor = (cta) => {
-                const b = String(cta).trim().split('-');
-                if (b.length === 3) return b[1] === '000' && b[2] === '000';
-                if (b.length === 4) return b[1] === '000' && b[2] === '000' && b[3] === '000';
-                return false;
+                const p = String(cta).trim().split('-');
+                if (niveles === 4) return p.length === 4 && p[1] === '000' && p[2] === '000' && p[3] === '000';
+                return p.length === 3 && p[1] === '000' && p[2] === '000';
             };
 
-            json.forEach(row => {
+            let d = { 
+                ing: 0, descV: 0, costV: 0, descC: 0, gastG: 0, 
+                rifNeto: 0, discNeto: 0,
+                actTotal: 0, actCirc: 0, inv: 0, pasTotal: 0, pasCorto: 0
+            };
+
+            dataRows.forEach(row => {
                 let cta = String(row[0] || '').trim();
-                let sal = parseFloat(row[5]) || 0;
+                let sal = parseFloat(row[5]) || 0; 
                 let val = Math.abs(sal);
 
                 if (esMayor(cta)) {
-                    if (cta.startsWith('4000')) d.ing += val;
-                    else if (cta.startsWith('4001')) d.descV += val;
-                    else if (['5002','5003'].some(s => cta.startsWith(s))) d.costV += val;
-                    else if (cta.startsWith('5000')) {
-                        if (cta.includes('-007-000')) d.descC += val; else d.costV += val;
+                    let num = parseInt(cta.split('-')[0]);
+
+                    // --- RESULTADOS ---
+                    if (num === 4000) d.ing += val;
+                    if (num === 4001) d.descV += val;
+                    
+                    // Costos y Descuentos sobre compras
+                    if (num >= 5000 && num < 6000) {
+                        // Cuentas específicas de descuento sobre compra: 5004 o 5000-007
+                        if (num === 5004 || cta.startsWith('5000-007')) {
+                            d.descC += val;
+                        } else {
+                            d.costV += val;
+                        }
                     }
-                    else if (cta.startsWith('5004')) d.descC += val;
-                    else if (['6000','6001','6002'].some(s => cta.startsWith(s))) d.gastG += val;
-                    else if (cta.startsWith('7000')) {
-                        if (sal < 0) d.rifG = val; else d.rifI = val;
-                    }
-                    else if (cta.startsWith('7001')) {
-                        if (sal < 0) d.discG = val; else d.discI = val;
+
+                    if ([6000, 6001, 6002].includes(num)) d.gastG += val;
+                    
+                    // RIF y Partidas Discontinuas (Signo directo solicitado)
+                    if (num === 7000) d.rifNeto += sal; 
+                    if (num === 7001) d.discNeto += sal;
+
+                    // --- BALANCE ---
+if (num >= 1000 && num < 2000) {
+    // Si es cuenta de Depreciación (1800) o Amortización (1900), 
+    // restamos el valor absoluto para que siempre disminuya el activo.
+    if (num >= 1800 && num <= 1900) {
+        d.actTotal -= val; 
+        if (num < 1700) d.actCirc -= val; // Por si hubiera amortizaciones en circulante
+    } else {
+        d.actTotal += sal; 
+        if (num < 1700) d.actCirc += sal;
+    }
+
+    if (num === 1400) d.inv += sal;
+}
+
+
+                    if (num >= 2000 && num < 3000) {
+                        d.pasTotal += val;
+                        if (num < 2200) d.pasCorto += val;
                     }
                 }
             });
 
+            // --- CÁLCULOS FINALES ---
             const utPre = d.ing - d.descV;
-            const utBru = utPre - (d.costV - d.descC);
+            const costoNeto = d.costV - d.descC;
+            const utBru = utPre - costoNeto;
             const utOp = utBru - d.gastG;
-            const rifN = d.rifI - d.rifG;
-            const discN = d.discI - d.discG;
-            const utNet = utOp + rifN + discN;
+            const utNet = utOp + d.rifNeto + d.discNeto;
 
-            actualizarUI(empresa, d, utPre, utBru, utOp, utNet, rifN, discN);
+            const leverage = d.actTotal > 0 ? (d.pasTotal / d.actTotal) * 100 : 0;
+            const acid = d.pasCorto > 0 ? (d.actCirc - d.inv) / d.pasCorto : 0;
+            const capTrab = d.actCirc - d.pasCorto;
+            const roa = d.actTotal > 0 ? (utOp / d.actTotal) * 100 : 0;
+
+            document.getElementById('txtAcid').innerText = acid.toFixed(2);
+            document.getElementById('txtCapTrabajo').innerText = fmt.format(capTrab);
+            document.getElementById('txtROA').innerText = roa.toFixed(2) + "%";
+            document.getElementById('txtLeverage').innerText = leverage.toFixed(2) + "%";
+
+            actualizarUI(empresa, d, utPre, costoNeto, utBru, utOp, utNet);
         }
 
-        function actualizarUI(empresa, d, utPre, utBru, utOp, utNet, rifN, discN) {
+        function actualizarUI(empresa, d, utPre, costoNeto, utBru, utOp, utNet) {
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('fileInfo').classList.remove('hidden');
             document.getElementById('empresaNombre').innerText = empresa;
             document.getElementById('txtUtilidadNeta').innerText = fmt.format(utNet);
             
             const margen = d.ing > 0 ? (utNet / d.ing) * 100 : 0;
-            document.getElementById('txtMargin').innerText = margen.toFixed(1) + "%";
+            document.getElementById('txtMargin').innerText = margen.toFixed(2) + "%";
             document.getElementById('txtGlobal').innerText = Math.max(0, Math.min(10, (margen/2)+5)).toFixed(1);
-            document.getElementById('msgGlobal').innerText = utNet > 0 ? "FLUJO POSITIVO" : "REVISAR MARGEN";
+            document.getElementById('msgGlobal').innerText = utNet > 0 ? "FLUJO POSITIVO" : "REVISAR FLUJO";
 
             const est = [
                 { l: '(+) Ingresos Brutos', v: d.ing },
                 { l: '(-) Descuentos s/Ventas', v: d.descV, c: 'text-rose-500' },
                 { l: '(=) Ingresos Netos', v: utPre, tot: true },
-                { l: '(-) Costo de Ventas', v: d.costV - d.descC, c: 'text-rose-500' },
+                { l: '(-) Costo de Ventas', v: d.costV, c: 'text-rose-500' },
+                { l: '(+) Descuentos s/Compras', v: d.descC, c: 'text-emerald-500' },
                 { l: '(=) Utilidad Bruta', v: utBru, tot: true },
                 { l: '(-) Gastos de Operación', v: d.gastG, c: 'text-rose-500' },
                 { l: '(=) Utilidad Operativa', v: utOp, tot: true },
-                { l: '(+/-) R.I.F. (Neto)', v: rifN, c: rifN < 0 ? 'text-rose-500' : 'text-emerald-500' },
-                { l: '(+/-) Partidas Discontinuas', v: discN, c: discN < 0 ? 'text-rose-500' : 'text-emerald-500' },
+                { l: '(+/-) R.I.F. Neto', v: d.rifNeto, c: d.rifNeto >= 0 ? 'text-emerald-500' : 'text-rose-500' },
+                { l: '(+/-) Partidas Discontinuas', v: d.discNeto, c: d.discNeto >= 0 ? 'text-emerald-500' : 'text-rose-500' },
                 { l: '(=) Utilidad Neta', v: utNet, tot: true, fin: true }
             ];
 
@@ -165,27 +236,43 @@
             renderCharts(margen, d, utNet);
         }
 
-        function renderCharts(margen, d, utNet) {
-            const cfg = (v, c, m=100) => ({
-                type: 'doughnut',
-                data: { datasets: [{ data:[v, m-v], backgroundColor:[c, '#F1F5F9'], borderWidth:0, borderRadius:8 }] },
-                options: { rotation:-90, circumference:180, cutout:'82%', plugins:{tooltip:{enabled:false}} }
-            });
-            if(charts.m) charts.m.destroy();
-            charts.m = new Chart(document.getElementById('gaugeMargin'), cfg(Math.max(0, Math.min(margen, 100)), '#6366F1'));
-            if(charts.s) charts.s.destroy();
-            charts.s = new Chart(document.getElementById('gaugeScore'), cfg(Math.max(0, (margen/2)+5), '#A855F7', 10));
-            if(charts.mix) charts.mix.destroy();
-            charts.mix = new Chart(document.getElementById('mixChart'), {
-                type: 'pie',
-                data: {
-                    labels: ['Costos', 'Gastos', 'Utilidad'],
-                    datasets: [{ data:[d.costV - d.descC, d.gastG, utNet > 0 ? utNet : 0], backgroundColor:['#FB7185', '#FBBF24', '#34D399'], borderWidth:0 }]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
+function renderCharts(margen, d, utNet) {
+    const cfg = (v, c, m=100) => ({
+        type: 'doughnut',
+        data: { datasets: [{ data:[v, m-v], backgroundColor:[c, '#F1F5F9'], borderWidth:0, borderRadius:8 }] },
+        options: { rotation:-90, circumference:180, cutout:'82%', plugins:{tooltip:{enabled:false}} }
+    });
 
+    if(charts.m) charts.m.destroy();
+    charts.m = new Chart(document.getElementById('gaugeMargin'), cfg(Math.max(0, Math.min(margen, 100)), '#6366F1'));
+    
+    if(charts.s) charts.s.destroy();
+    charts.s = new Chart(document.getElementById('gaugeScore'), cfg(Math.max(0, (margen/2)+5), '#A855F7', 10));
+
+    if(charts.mix) charts.mix.destroy();
+    charts.mix = new Chart(document.getElementById('mixChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Costos', 'Gastos', 'Otros Res.', 'Utilidad Neta'],
+            datasets: [{ 
+                data: [
+                    d.costV - d.descC, 
+                    d.gastG, 
+                    Math.abs(d.rifNeto + d.discNeto), 
+                    utNet > 0 ? utNet : 0 
+                ], 
+                backgroundColor: ['#FB7185', '#FBBF24', '#818CF8', '#6366F1'], 
+                borderWidth: 0 
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { position: 'bottom' } 
+            } 
+        }
+    });
+}
         const dz = document.getElementById('dropZone');
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
             dz.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); }, false);
