@@ -197,6 +197,12 @@
 
         const impMap = { "01": "ISR", "02": "IVA", "03": "IEPS" };
 
+        const planesRetiroMap = {
+    "a": "Aportaciones voluntarias",
+    "b": "Aportaciones complementarias de retiro",
+    "c": "Depósitos en cuentas especiales para el ahorro"
+};
+
 
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => e.target.files[0] && processFile(e.target.files[0]);
@@ -321,6 +327,40 @@
                 {l: "Ganancia", v: `$${f(getAt(acc, "Ganancia"))}`, c: 'text-green-600'},
                 {l: "Pérdida", v: `$${f(getAt(acc, "Perdida"))}`, c: 'text-red-600'}
             ]);
+
+// --- COMPLEMENTO: PLANES DE RETIRO ---
+const planes = findNodes(xml, "Planesderetiro")[0];
+if (planes) {
+    // 1. Extraer datos del nodo principal
+    const itemsPlanes = [
+        { l: "Sist. Financiero", v: getAt(planes, "SistemaFinanc") },
+        { l: "Ref. Contrato", v: getAt(planes, "NumReferencia") || "N/A" },
+        { l: "Aport. Año Anterior", v: `$${f(getAt(planes, "MontTotAportAnioInmAnterior"))}` },
+        { l: "Int. Reales Devengados", v: `$${f(getAt(planes, "MontIntRealesDevengAniooInmAnt"))}` }
+    ];
+
+    // 2. Extraer las aportaciones (nodos hijos)
+    const aportaciones = findNodes(planes, "AportacionesODepositos");
+    const detalleAportaciones = aportaciones.map(ap => {
+        const tipo = getAt(ap, "TipoAportacionODeposito");
+        const descTipo = planesRetiroMap[tipo] || `Tipo ${tipo}`;
+        return `${descTipo}: $${f(getAt(ap, "MontAportODep"))}`;
+    }).join(' | ');
+
+    if (detalleAportaciones) {
+        itemsPlanes.push({ l: "Detalle Aportaciones", v: detalleAportaciones, c: 'text-green-700' });
+    }
+
+    // 3. Agregar si hubo retiros (opcional, para auditoría rápida)
+    if (getAt(planes, "HuboRetirosAnioInmAnt") === "SI") {
+        itemsPlanes.push({ l: "Retiros Realizados", v: `$${f(getAt(planes, "MontTotRetiradoAnioInmAnt"))}`, c: 'text-red-600' });
+    }
+
+    addComp(compContainer, "Planes Personales de Retiro", itemsPlanes);
+}
+
+
+
 
             const der = findNodes(xml, "Operacionesconderivados")[0];
             if(der) addComp(compContainer, "Operaciones con Derivados", [
