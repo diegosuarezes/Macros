@@ -259,37 +259,63 @@
             fillTotales(data);
         }
 
-        function renderPago(xml, comp) {
-            const emi = findNodes(xml, "Emisor")[0];
-            const rec = findNodes(xml, "Receptor")[0];
-            const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
-            const totalesNode = findNodes(xml, "Totales")[0];
-            let sumaBaseIVA = 0, sumaImporteIVA = 0, tableRows = [];
+function renderPago(xml, comp) {
+    const emi = findNodes(xml, "Emisor")[0];
+    const rec = findNodes(xml, "Receptor")[0];
+    const tfd = findNodes(xml, "TimbreFiscalDigital")[0];
+    const totalesNode = findNodes(xml, "Totales")[0];
+    
+    // Acumuladores para los totales
+    let sumaBaseIVA = 0, sumaImporteIVA = 0;
+    let sumaRetIVA = 0, sumaRetISR = 0;
+    let tableRows = [];
 
-            findNodes(xml, "Pago").forEach(p => {
-                tableRows.push(`<tr class="bg-slate-50/50"><td class="p-4 text-xs font-bold text-slate-900">${getAt(p, "FechaPago").split('T')[0]}</td><td class="p-4">Pago vía ${relForma[getAt(p, "FormaDePagoP")] || getAt(p, "FormaDePagoP")}</td><td class="p-4 text-center font-bold text-slate-600">${getAt(p, "MonedaP")}</td><td class="p-4 text-right text-slate-400 uppercase text-[10px]">Monto:</td><td class="p-4 text-right font-black text-green-600">$${f(getAt(p, "Monto"))}</td></tr>`);
-                findNodes(p, "DoctoRelacionado").forEach(dr => {
-                    findNodes(dr, "TrasladoDR").forEach(t => { if (getAt(t, "ImpuestoDR") === "002") { sumaBaseIVA += parseFloat(getAt(t, "BaseDR") || 0); sumaImporteIVA += parseFloat(getAt(t, "ImporteDR") || 0); } });
-                    tableRows.push(`<tr><td class="p-3 text-[10px] text-slate-400">DOC REL</td><td class="p-3 text-[10px] font-mono italic" colspan="2">${getAt(dr, "IdDocumento")}</td><td class="p-3 text-right text-[10px] text-slate-400 italic">Imp. Pagado:</td><td class="p-3 text-right text-[11px] font-bold text-slate-700">$${f(getAt(dr, "ImpPagado"))}</td></tr>`);
-                });
+    findNodes(xml, "Pago").forEach(p => {
+        tableRows.push(`<tr class="bg-slate-50/50"><td class="p-4 text-xs font-bold text-slate-900">${getAt(p, "FechaPago").split('T')[0]}</td><td class="p-4">Pago vía ${relForma[getAt(p, "FormaDePagoP")] || getAt(p, "FormaDePagoP")}</td><td class="p-4 text-center font-bold text-slate-600">${getAt(p, "MonedaP")}</td><td class="p-4 text-right text-slate-400 uppercase text-[10px]">Monto:</td><td class="p-4 text-right font-black text-green-600">$${f(getAt(p, "Monto"))}</td></tr>`);
+        
+        findNodes(p, "DoctoRelacionado").forEach(dr => {
+            // Extraer Traslados (IVA 16%, etc)
+            findNodes(dr, "TrasladoDR").forEach(t => { 
+                if (getAt(t, "ImpuestoDR") === "002") { 
+                    sumaBaseIVA += parseFloat(getAt(t, "BaseDR") || 0); 
+                    sumaImporteIVA += parseFloat(getAt(t, "ImporteDR") || 0); 
+                } 
             });
 
-            const data = {
-                emi: { n: getAt(emi, "Nombre"), r: getAt(emi, "Rfc"), reg: getAt(emi, "RegimenFiscal") },
-                rec: { n: getAt(rec, "Nombre"), r: getAt(rec, "Rfc"), reg: getAt(rec, "RegimenFiscalReceptor"), uso: getAt(rec, "UsoCFDI") },
-                folio: (getAt(comp, "Serie") + " " + getAt(comp, "Folio")).trim() || 'S/F',
-                fecha: getAt(comp, "Fecha"), uuid: getAt(tfd, "UUID"),
-                total: getAt(totalesNode, "MontoTotalPagos"), rel: null, taxes: []
-            };
-            if(sumaBaseIVA > 0) data.taxes.push({ l: 'Base IVA Trasladado (DR)', v: sumaBaseIVA, isBase: true });
-            if(sumaImporteIVA > 0) data.taxes.push({ l: 'IVA Trasladado (DR)', v: sumaImporteIVA });
+            // NUEVO: Extraer Retenciones (ISR 001, IVA 002)
+            findNodes(dr, "RetencionDR").forEach(r => {
+                const imp = getAt(r, "ImpuestoDR");
+                const importe = parseFloat(getAt(r, "ImporteDR") || 0);
+                if (imp === "001") sumaRetISR += importe;
+                if (imp === "002") sumaRetIVA += importe;
+            });
 
-            setupUI(data, 'P');
-            document.getElementById('v-table-head').innerHTML = `<tr><th class="p-4 text-[10px]">Fecha</th><th class="p-4 text-[10px]">Concepto / UUID</th><th class="p-4 text-center text-[10px]">Moneda</th><th class="p-4 text-right text-[10px]">Detalle</th><th class="p-4 text-right text-[10px]">Monto</th></tr>`;
-            document.getElementById('v-table-body').innerHTML = tableRows.join('');
-            fillTotales(data, "TOTAL MONTO PAGOS");
-        }
+            tableRows.push(`<tr><td class="p-3 text-[10px] text-slate-400">DOC REL</td><td class="p-3 text-[10px] font-mono italic" colspan="2">${getAt(dr, "IdDocumento")}</td><td class="p-3 text-right text-[10px] text-slate-400 italic">Imp. Pagado:</td><td class="p-3 text-right text-[11px] font-bold text-slate-700">$${f(getAt(dr, "ImpPagado"))}</td></tr>`);
+        });
+    });
 
+    const data = {
+        emi: { n: getAt(emi, "Nombre"), r: getAt(emi, "Rfc"), reg: getAt(emi, "RegimenFiscal") },
+        rec: { n: getAt(rec, "Nombre"), r: getAt(rec, "Rfc"), reg: getAt(rec, "RegimenFiscalReceptor"), uso: getAt(rec, "UsoCFDI") },
+        folio: (getAt(comp, "Serie") + " " + getAt(comp, "Folio")).trim() || 'S/F',
+        fecha: getAt(comp, "Fecha"), uuid: getAt(tfd, "UUID"),
+        total: getAt(totalesNode, "MontoTotalPagos"), rel: null, 
+        taxes: []
+    };
+
+    // Agregar impuestos al objeto data para que fillTotales los renderice
+    if(sumaBaseIVA > 0) data.taxes.push({ l: 'Base IVA Trasladado (DR)', v: sumaBaseIVA, isBase: true });
+    if(sumaImporteIVA > 0) data.taxes.push({ l: 'IVA Trasladado (DR)', v: sumaImporteIVA });
+    
+    // Inserción de las retenciones detectadas
+    if(sumaRetIVA > 0) data.taxes.push({ l: 'Retención IVA (DR)', v: sumaRetIVA, isRet: true });
+    if(sumaRetISR > 0) data.taxes.push({ l: 'Retención ISR (DR)', v: sumaRetISR, isRet: true });
+
+    setupUI(data, 'P');
+    document.getElementById('v-table-head').innerHTML = `<tr><th class="p-4 text-[10px]">Fecha</th><th class="p-4 text-[10px]">Concepto / UUID</th><th class="p-4 text-center text-[10px]">Moneda</th><th class="p-4 text-right text-[10px]">Detalle</th><th class="p-4 text-right text-[10px]">Monto</th></tr>`;
+    document.getElementById('v-table-body').innerHTML = tableRows.join('');
+    fillTotales(data, "TOTAL MONTO PAGOS");
+}
 
         function renderNomina(xml, comp) {
             const emi = findNodes(xml, "Emisor")[0];
