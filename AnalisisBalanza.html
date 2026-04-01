@@ -15,6 +15,40 @@
         .row-total { background-color: #F8FAFC; border-radius: 12px; margin-top: 4px; padding: 12px; border: 1px solid #F1F5F9; }
         #dropZone.dragover { border-color: #6366F1; background-color: #F5F7FF; transform: scale(1.01); }
         .gradient-text { background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* --- LIMPIEZA PARA IMPRESIÓN --- */
+        @media print {
+            /* Ocultamos lo que no es el reporte */
+            #dropZone, .no-print, button, input {
+                display: none !important;
+            }
+
+            /* Ajustes básicos de página */
+            body {
+                background-color: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Evitamos que las tarjetas se corten entre hojas */
+            .app-card {
+                box-shadow: none !important;
+                border: 1px solid #E2E8F0 !important;
+                break-inside: avoid;
+            }
+
+            /* Aseguramos que el contenedor use todo el ancho disponible */
+            .max-w-6xl {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+        }
+
+
+
     </style>
 </head>
 <body class="p-6 md:p-12">
@@ -31,6 +65,11 @@
                 </div>
             </div>
         </header>
+
+<button onclick="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all no-print">
+    <i class="fa-solid fa-file-pdf mr-2"></i> Exportar PDF
+</button>
+
 
         <div id="dropZone" class="app-card p-16 mb-12 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-slate-200 transition-all duration-300 group" onclick="document.getElementById('inputExcel').click()">
             <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
