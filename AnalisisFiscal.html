@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Fiscal Pro - v1.7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #1E293B; }
+        .data-card { border: 1px solid #E2E8F0; background: #FFFFFF; border-radius: 12px; overflow: hidden; }
+        .input-corporate { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600; color: #334155; outline: none; transition: all 0.2s; }
+        .input-corporate:focus { border-color: #94A3B8; background: #FFF; }
+        
+        /* Acentos por tipo de impuesto */
+        .accent-isr { border-left: 5px solid #1E293B; }
+        .accent-iva { border-left: 5px solid #B91C1C; }
+        .accent-ret { border-left: 5px solid #F59E0B; }
+        .accent-favor { border-left: 5px solid #10B981; }
+
+        #dropZone { border: 2px dashed #E2E8F0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        #dropZone::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 10px; padding: 2px;
+            background: linear-gradient(135deg, #22D3EE 0%, #4338CA 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out; mask-composite: exclude; opacity: 0; transition: opacity 0.3s;
+        }
+        #dropZone.dragover::before { opacity: 1; }
+        #dropZone.dragover { background: #F0F9FF; transform: scale(1.01); border-style: solid; border-color: transparent; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <header class="border-b border-slate-100 py-5 px-10 flex justify-between items-center bg-white shadow-sm z-20">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight">Análisis Fiscal</h2>
+        </div>
+        <div id="statusFile" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-100 uppercase tracking-wider">
+            Esperando Importación
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-10 bg-[#FAFAFA]">
+        <div class="container mx-auto max-w-6xl">
+            
+            <div id="dropZone" class="rounded-xl p-10 mb-8 flex flex-col items-center justify-center cursor-pointer bg-white shadow-sm group" onclick="document.getElementById('inputExcel').click()">
+                <i class="fa-solid fa-file-invoice-dollar text-slate-300 mb-3 text-4xl group-hover:text-indigo-400 transition-colors"></i>
+                <p class="text-slate-500 font-semibold tracking-tight">Importar Papel de Trabajo Anual</p>
+                <p class="text-slate-400 text-[11px] mt-1 italic">Detección automática de ISR, IVA y Retenciones</p>
+                <input type="file" id="inputExcel" accept=".xlsx, .xls" class="hidden" onchange="procesarExcel(this.files[0])">
+            </div>
+
+            <div id="controles" class="hidden mb-8 flex items-end gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div class="flex-1">
+                    <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Módulo Seleccionado</label>
+                    <select id="selectorHoja" onchange="dibujarGrafica()" class="input-corporate w-full max-w-md cursor-pointer shadow-sm"></select>
+                </div>
+                <button onclick="location.reload()" class="h-[42px] px-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-black transition-all uppercase tracking-widest border border-slate-200 bg-white">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>Reiniciar
+                </button>
+            </div>
+
+            <div id="panelTotales" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 hidden"></div>
+
+            <div class="data-card p-10 min-h-[520px] flex flex-col shadow-sm border-slate-100">
+                <div id="placeholder" class="flex-1 flex flex-col items-center justify-center text-slate-300 opacity-60">
+                    <i class="fa-solid fa-chart-simple text-6xl mb-4"></i>
+                    <p class="text-sm font-medium">Seleccione un módulo para generar la analítica mensual</p>
+                </div>
+                <canvas id="canvasGrafica" class="hidden flex-1"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let libroActual = null;
+        let chartInstancia = null;
+        const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+        // --- DICCIONARIO MAESTRO BLINDADO ---
+        const CLAVES = {
+            ISR: ["PAGO PROVISIONAL DEL PERIODO A CARGO", "PAGO PROVISIONAL"],
+            IVA_PAGAR: ["TOTAL IVA A PAGAR"],
+            IVA_FAVOR: ["SALDO A FAVOR"],
+            RETENCIONES: [
+                "ARRENDAMIENTO PAGADOS A PERSONAS FISICAS",
+                "HONORARIOS PAGADOS A PERSONAS FISICAS",
+                "RESICO PERSONAS FISICAS",
+                "SUELDOS Y SALARIOS",
+                "ASIMILADOS",
+                "ENTERO AJUSTE ANUAL POR SUELDOS Y SALARIOS",
+                "OTROS (DIVIDENDOS O PAGO DE INTERESES)",
+                "ARRENDAMIENTO PAGADOS A PERSONAS FISICAS AL 16%",
+                "HONORARIOS PAGADOS A PERSONAS FISICAS AL 16%",
+                "FLETES AL 16%",
+                "OTROS (ESPECIFICAR MEDIANTE NOTA EN CADA MES)"
+            ]
+        };
+
+        const COLORES_RET = ['#1E293B', '#4338CA', '#0F172A', '#334155', '#475569', '#64748B', '#94A3B8', '#B91C1C', '#991B1B', '#7F1D1D', '#450A0A'];
+
+        async function procesarExcel(archivo) {
+            if (!archivo) return;
+            const data = await archivo.arrayBuffer();
+            libroActual = XLSX.read(data);
+            const selector = document.getElementById('selectorHoja');
+            selector.innerHTML = '<option value="">-- SELECCIONAR MÓDULO --</option>';
+            libroActual.SheetNames.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n; opt.textContent = n; selector.appendChild(opt);
+            });
+            document.getElementById('controles').classList.remove('hidden');
+            document.getElementById('statusFile').innerText = archivo.name.toUpperCase();
+        }
+
+        function dibujarGrafica() {
+            const nombreHoja = document.getElementById('selectorHoja').value;
+            if (!nombreHoja) return;
+
+            document.getElementById('placeholder').classList.add('hidden');
+            const canvas = document.getElementById('canvasGrafica');
+            const panel = document.getElementById('panelTotales');
+            canvas.classList.remove('hidden');
+            panel.classList.remove('hidden');
+            panel.innerHTML = "";
+
+            const hoja = libroActual.Sheets[nombreHoja];
+            const mesesLabels = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+            const data = XLSX.utils.sheet_to_json(hoja, { header: 1 });
+            
+            let datasets = [];
+
+            // --- ESCANEO DE RETENCIONES (ESPECÍFICO) ---
+            if (nombreHoja.toUpperCase().includes("RETENCION")) {
+                let colorIdx = 0;
+                CLAVES.RETENCIONES.forEach(concepto => {
+                    const fila = data.find(f => f[0] && f[0].toString().trim().toUpperCase() === concepto);
+                    if (fila) {
+                        const valores = fila.slice(1, 13).map(v => parseFloat(v) || 0);
+                        const totalAnual = parseFloat(fila[13]) || 0;
+
+                        if (totalAnual > 0) {
+                            datasets.push({
+                                label: concepto,
+                                data: valores,
+                                backgroundColor: COLORES_RET[colorIdx % COLORES_RET.length],
+                                borderRadius: 4,
+                                barThickness: 15
+                            });
+                            panel.innerHTML += `
+                                <div class="data-card p-6 accent-ret shadow-sm animate-in zoom-in-95 duration-300">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 truncate">${concepto}</p>
+                                    <p class="text-xl font-bold text-slate-900">${fmt.format(totalAnual)}</p>
+                                </div>`;
+                            colorIdx++;
+                        }
+                    }
+                });
+            } 
+            // --- ESCANEO ISR / IVA (SEMÁNTICO) ---
+            else {
+                const esIVA = nombreHoja.toUpperCase().includes("IVA");
+                const conceptosABuscar = [...CLAVES.ISR, ...CLAVES.IVA_PAGAR, ...CLAVES.IVA_FAVOR];
+                
+                conceptosABuscar.forEach(cBusca => {
+                    const fila = data.find(f => f[0] && f[0].toString().trim().toUpperCase() === cBusca);
+                    if (fila) {
+                        const offset = esIVA ? 2 : 1; 
+                        const valores = fila.slice(offset, offset + 12).map(v => parseFloat(v) || 0);
+                        const total = parseFloat(fila[offset + 12]) || 0;
+                        
+                        let color = '#1E293B'; let clase = 'accent-isr';
+                        if (cBusca.includes("PAGAR")) { color = '#B91C1C'; clase = 'accent-iva'; }
+                        if (cBusca.includes("FAVOR")) { color = '#10B981'; clase = 'accent-favor'; }
+
+                        datasets.push({ label: cBusca, data: valores, backgroundColor: color, borderRadius: 6, barThickness: 30 });
+                        panel.innerHTML += `
+                            <div class="data-card p-8 ${clase} shadow-sm animate-in zoom-in-95 duration-300">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">${cBusca}</p>
+                                <p class="text-3xl font-bold text-slate-900">${fmt.format(total)}</p>
+                            </div>`;
+                    }
+                });
+            }
+            renderChart(mesesLabels, datasets);
+        }
+
+        function renderChart(labels, datasets) {
+            const ctx = document.getElementById('canvasGrafica').getContext('2d');
+            if (chartInstancia) chartInstancia.destroy();
+            chartInstancia = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10, weight: '700' }, color: '#64748B', padding: 30 } },
+                        tooltip: { backgroundColor: '#0F172A', padding: 12, callbacks: { label: c => ` ${c.dataset.label}: ${fmt.format(c.raw)}` } }
+                    },
+                    scales: {
+                        y: { ticks: { callback: v => fmt.format(v), font: { size: 10 }, color: '#94A3B8' }, grid: { borderDash: [4, 4], color: '#F1F5F9' }, border: { display: false } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '800' }, color: '#64748B' }, border: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const dz = document.getElementById('dropZone');
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+        dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); });
+        dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); procesarExcel(e.dataTransfer.files[0]); });
+    </script>
+</body>
+</html>
