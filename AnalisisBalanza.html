@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría Rápida</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #334155; }
+        .app-card { background: white; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04); border: 1px solid #E2E8F0; }
+        .row-total { background-color: #F8FAFC; border-radius: 12px; margin-top: 4px; padding: 12px; border: 1px solid #F1F5F9; }
+        #dropZone.dragover { border-color: #6366F1; background-color: #F5F7FF; transform: scale(1.01); }
+        .gradient-text { background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 text-center md:text-left">
+            <div>
+                <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-[0.5em] mb-2 block">Financial Intelligence Unit</span>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Tax Health <span class="gradient-text">Score</span></h1>
+            </div>
+            <div id="fileInfo" class="hidden">
+                <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <p id="empresaNombre" class="text-sm font-bold text-slate-700"></p>
+                </div>
+            </div>
+        </header>
+
+        <div id="dropZone" class="app-card p-16 mb-12 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-slate-200 transition-all duration-300 group" onclick="document.getElementById('inputExcel').click()">
+            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-file-invoice-dollar text-3xl"></i>
+            </div>
+            <h3 class="text-slate-800 font-extrabold text-xl mb-2">Analizar Balanza</h3>
+            <p class="text-slate-500 text-sm font-medium">Suelta el archivo aquí para procesar niveles y RIF</p>
+            <input type="file" id="inputExcel" accept=".xlsx, .xls, .csv" class="hidden" onchange="analizarBalanza(this.files[0])">
+        </div>
+
+        <div id="dashboard" class="hidden space-y-10 animate-in fade-in duration-500">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="app-card p-10 flex flex-col items-center">
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8">Margen Neto</p>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8">(Utilidad Neta / Ingresos Brutos)</p>
+                    <canvas id="gaugeMargin"></canvas>
+                    <span id="txtMargin" class="text-4xl font-black mt-4 text-slate-800">0%</span>
+                </div>
+
+                <div class="app-card p-10 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-2xl shadow-indigo-100">
+                    <p class="text-[11px] font-black opacity-70 uppercase tracking-widest mb-4">Utilidad Neta</p>
+                    <span id="txtUtilidadNeta" class="text-5xl font-black tracking-tight">$0.00</span>
+                    <div class="mt-8 px-4 py-2 bg-white/10 rounded-full">
+                        <p id="msgGlobal" class="text-[10px] font-black uppercase tracking-widest"></p>
+                    </div>
+                </div>
+
+                <div class="app-card p-10 flex flex-col items-center">
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8">Salud de Operación</p>
+                    <canvas id="gaugeScore"></canvas>
+                    <span id="txtGlobal" class="text-4xl font-black mt-4 text-slate-800">0.0</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div class="app-card p-10">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Reporte de Resultados</h3>
+                    <div id="resumenEstructura" class="space-y-4"></div>
+                </div>
+                <div class="app-card p-10 flex flex-col">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 border-b pb-4">Composición</h3>
+                    <div class="flex-1 min-h-[300px]"><canvas id="mixChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+        async function analizarBalanza(file) {
+            if(!file) return;
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+
+            let d = { ing: 0, descV: 0, costV: 0, descC: 0, gastG: 0, rifG: 0, rifI: 0, discG: 0, discI: 0 };
+            let empresa = json[0][0] || "Entidad Analizada";
+
+            const esMayor = (cta) => {
+                const b = String(cta).trim().split('-');
+                if (b.length === 3) return b[1] === '000' && b[2] === '000';
+                if (b.length === 4) return b[1] === '000' && b[2] === '000' && b[3] === '000';
+                return false;
+            };
+
+            json.forEach(row => {
+                let cta = String(row[0] || '').trim();
+                let sal = parseFloat(row[5]) || 0;
+                let val = Math.abs(sal);
+
+                if (esMayor(cta)) {
+                    if (cta.startsWith('4000')) d.ing += val;
+                    else if (cta.startsWith('4001')) d.descV += val;
+                    else if (['5002','5003'].some(s => cta.startsWith(s))) d.costV += val;
+                    else if (cta.startsWith('5000')) {
+                        if (cta.includes('-007-000')) d.descC += val; else d.costV += val;
+                    }
+                    else if (cta.startsWith('5004')) d.descC += val;
+                    else if (['6000','6001','6002'].some(s => cta.startsWith(s))) d.gastG += val;
+                    else if (cta.startsWith('7000')) {
+                        if (sal < 0) d.rifG = val; else d.rifI = val;
+                    }
+                    else if (cta.startsWith('7001')) {
+                        if (sal < 0) d.discG = val; else d.discI = val;
+                    }
+                }
+            });
+
+            const utPre = d.ing - d.descV;
+            const utBru = utPre - (d.costV - d.descC);
+            const utOp = utBru - d.gastG;
+            const rifN = d.rifI - d.rifG;
+            const discN = d.discI - d.discG;
+            const utNet = utOp + rifN + discN;
+
+            actualizarUI(empresa, d, utPre, utBru, utOp, utNet, rifN, discN);
+        }
+
+        function actualizarUI(empresa, d, utPre, utBru, utOp, utNet, rifN, discN) {
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('fileInfo').classList.remove('hidden');
+            document.getElementById('empresaNombre').innerText = empresa;
+            document.getElementById('txtUtilidadNeta').innerText = fmt.format(utNet);
+            
+            const margen = d.ing > 0 ? (utNet / d.ing) * 100 : 0;
+            document.getElementById('txtMargin').innerText = margen.toFixed(1) + "%";
+            document.getElementById('txtGlobal').innerText = Math.max(0, Math.min(10, (margen/2)+5)).toFixed(1);
+            document.getElementById('msgGlobal').innerText = utNet > 0 ? "FLUJO POSITIVO" : "REVISAR MARGEN";
+
+            const est = [
+                { l: '(+) Ingresos Brutos', v: d.ing },
+                { l: '(-) Descuentos s/Ventas', v: d.descV, c: 'text-rose-500' },
+                { l: '(=) Ingresos Netos', v: utPre, tot: true },
+                { l: '(-) Costo de Ventas', v: d.costV - d.descC, c: 'text-rose-500' },
+                { l: '(=) Utilidad Bruta', v: utBru, tot: true },
+                { l: '(-) Gastos de Operación', v: d.gastG, c: 'text-rose-500' },
+                { l: '(=) Utilidad Operativa', v: utOp, tot: true },
+                { l: '(+/-) R.I.F. (Neto)', v: rifN, c: rifN < 0 ? 'text-rose-500' : 'text-emerald-500' },
+                { l: '(+/-) Partidas Discontinuas', v: discN, c: discN < 0 ? 'text-rose-500' : 'text-emerald-500' },
+                { l: '(=) Utilidad Neta', v: utNet, tot: true, fin: true }
+            ];
+
+            document.getElementById('resumenEstructura').innerHTML = est.map(i => `
+                <div class="flex justify-between items-center ${i.tot ? 'row-total' : 'px-4'} ${i.fin ? 'bg-indigo-600 text-white !mt-6 shadow-xl' : ''}">
+                    <span class="text-[10px] font-extrabold ${i.tot && !i.fin ? 'text-slate-800' : (i.fin ? 'text-white' : 'text-slate-400')} uppercase tracking-wider">${i.l}</span>
+                    <span class="text-sm font-bold ${i.c || (i.fin ? 'text-white' : 'text-slate-700')}">${fmt.format(i.v)}</span>
+                </div>
+            `).join('');
+
+            renderCharts(margen, d, utNet);
+        }
+
+        function renderCharts(margen, d, utNet) {
+            const cfg = (v, c, m=100) => ({
+                type: 'doughnut',
+                data: { datasets: [{ data:[v, m-v], backgroundColor:[c, '#F1F5F9'], borderWidth:0, borderRadius:8 }] },
+                options: { rotation:-90, circumference:180, cutout:'82%', plugins:{tooltip:{enabled:false}} }
+            });
+            if(charts.m) charts.m.destroy();
+            charts.m = new Chart(document.getElementById('gaugeMargin'), cfg(Math.max(0, Math.min(margen, 100)), '#6366F1'));
+            if(charts.s) charts.s.destroy();
+            charts.s = new Chart(document.getElementById('gaugeScore'), cfg(Math.max(0, (margen/2)+5), '#A855F7', 10));
+            if(charts.mix) charts.mix.destroy();
+            charts.mix = new Chart(document.getElementById('mixChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Costos', 'Gastos', 'Utilidad'],
+                    datasets: [{ data:[d.costV - d.descC, d.gastG, utNet > 0 ? utNet : 0], backgroundColor:['#FB7185', '#FBBF24', '#34D399'], borderWidth:0 }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        const dz = document.getElementById('dropZone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+            dz.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); }, false);
+        });
+        dz.addEventListener('dragover', () => dz.classList.add('dragover'));
+        ['dragleave', 'drop'].forEach(e => dz.addEventListener(e, () => dz.classList.remove('dragover')));
+        dz.addEventListener('drop', e => analizarBalanza(e.dataTransfer.files[0]));
+    </script>
+</body>
+</html>
