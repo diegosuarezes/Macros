@@ -321,12 +321,14 @@
 
 
                 addComp(compContainer, "Dividendos / Utilidades", [
-                    {l: "Tipo Sociedad", v: getAt(detDiv, "TipoSocDistrDiv")},
-                    {l: "Div. Acum. Extranjero", v: `$${f(getAt(detDiv, "MontDivAcumExt"))}`},
-                    {l: "Ret. Extranjero", v: `$${f(getAt(detDiv, "MontRetExtDivExt"))}`, c: 'text-red-500'},
-                    {l: "ISR Acred. Nacional", v: `$${f(getAt(detDiv, "MontISRAcredNal"))}`},
                     {l: "Origen de Utilidad", v: descCufin},
+                    {l: "Tipo Sociedad", v: getAt(detDiv, "TipoSocDistrDiv")},
                     {l: "Importe Retenido (México)", v: `$${f(getAt(detDiv, "MontISRAcredRetMexico"))}`},
+                    {l: "ISR Acred. Nacional", v: `$${f(getAt(detDiv, "MontISRAcredNal"))}`},
+                    {l: "Importe Retenido (Extranjero)", v: `$${f(getAt(detDiv, "MontISRAcredRetExtranjero"))}`},                    
+                    {l: "Div. Acum. Nacional", v: `$${f(getAt(detDiv, "MontDivAcumNal"))}`},
+                    {l: "Ret. Extranjero", v: `$${f(getAt(detDiv, "MontRetExtDivExt"))}`},
+                    {l: "Div. Acum. Extranjero", v: `$${f(getAt(detDiv, "MontDivAcumExt"))}`},
                 ]);
             }
 
