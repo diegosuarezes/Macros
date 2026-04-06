@@ -297,10 +297,12 @@
 
             const int = findNodes(xml, "Intereses")[0];
             if(int) addComp(compContainer, "Intereses", [
+                {l: "Sist. Financiero", v: getAt(int, "SistFinanciero")},
+                {l: "Op. Fin. Derivadas", v: getAt(int, "OperFinancDerivad")},
+                {l: "Int. Retirados en el Periodo", v: getAt(int, "RetiroAORESRetInt")},
                 {l: "Int. Nominal", v: `$${f(getAt(int, "MontIntNominal"))}`},
                 {l: "Int. Real", v: `$${f(getAt(int, "MontIntReal"))}`},
                 {l: "Pérdida", v: `$${f(getAt(int, "Perdida"))}`, c: 'text-red-600'},
-                {l: "Sist. Financiero", v: getAt(int, "SistFinanciero")}
             ]);
 
             const intHip = findNodes(xml, "Intereseshipotecarios")[0];
