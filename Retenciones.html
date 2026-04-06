@@ -127,7 +127,10 @@
 
         <!-- Detalles de Totales -->
         <div class="mb-10 bg-slate-50 rounded-3xl p-8 border border-slate-100">
-            <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400 border-b border-slate-200 pb-2">Resumen de Operación</h3>
+            <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 text-slate-400 border-b border-slate-200 pb-2">
+    Resumen de Operación: <span id="v-desc-retenc" class="text-indigo-600 ml-2"></span>
+</h3>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Monto Tot. Operación</p>
@@ -226,6 +229,11 @@
         function renderRetenciones(xml) {
             const ret = findNodes(xml, "Retenciones")[0];
             if (!ret) { alert("Este no parece ser un XML de Retenciones."); return; }
+
+            const cveRet = getAt(ret, "CveRetenc");
+            const descRet = getAt(ret, "DescRetenc");
+            document.getElementById('v-desc-retenc').textContent = `${cveRet} - ${descRet}`;
+            
 
             const emi = findNodes(xml, "Emisor")[0];
             const rec = findNodes(xml, "Receptor")[0];
