@@ -348,8 +348,14 @@ if (planes) {
     const itemsPlanes = [
         { l: "Sist. Financiero", v: getAt(planes, "SistemaFinanc") },
         { l: "Ref. Contrato", v: getAt(planes, "NumReferencia") || "N/A" },
-        { l: "Aport. Año Anterior", v: `$${f(getAt(planes, "MontTotAportAnioInmAnterior"))}` },
-        { l: "Int. Reales Devengados", v: `$${f(getAt(planes, "MontIntRealesDevengAniooInmAnt"))}` }
+        { l: "Monto Aport. Año Anterior", v: `$${f(getAt(planes, "MontTotAportAnioInmAnterior"))}` },
+        { l: "Int. Reales Devengados Año Anterior", v: `$${f(getAt(planes, "MontIntRealesDevengAniooInmAnt"))}` },
+        { l: "Hubo Retiros Año Anterior (Antes de Permanencia)", v: getAt(planes, "HuboRetirosAnioInmAntPer") },
+        { l: "Monto Retirado Año Anterior (Antes de Permanencia)", v: `$${f(getAt(planes, "MontTotRetiradoAnioInmAntPer"))}` },
+        { l: "Monto Exento Retirado Año Anterior", v: `$${f(getAt(planes, "MontTotExentRetiradoAnioInmAnt"))}` },
+        { l: "Monto Excedente del total Exento Retirado Año Anterior", v: `$${f(getAt(planes, "MontTotExedenteAnioInmAnt"))}` },
+        { l: "Hubo Retiros Año Anterior", v: getAt(planes, "HuboRetirosAnioInmAnt") },
+        { l: "Monto Retirado Año Anterior", v: `$${f(getAt(planes, "MontTotRetiradoAnioInmAnt"))}` },
     ];
 
     // 2. Extraer las aportaciones (nodos hijos)
