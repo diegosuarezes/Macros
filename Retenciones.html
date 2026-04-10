@@ -232,7 +232,7 @@
 
             const cveRet = getAt(ret, "CveRetenc");
             const descRet = getAt(ret, "DescRetenc");
-            document.getElementById('v-desc-retenc').textContent = `${cveRet} - ${descRet}`;
+            document.getElementById('v-desc-retenc').textContent = `${cveRet} ${descRet ? '- ' + descRet : ''}`;
             
 
             const emi = findNodes(xml, "Emisor")[0];
