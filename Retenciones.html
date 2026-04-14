@@ -152,7 +152,12 @@
         </div>
 
         <!-- Sección de Complementos Dinámica -->
-        <div id="v-complementos-container"></div>
+        <div id="v-relacionados-container" class="hidden mb-10 p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-white">
+    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Documentos Relacionados</p>
+    <div id="v-relacionados-list" class="space-y-2"></div>
+</div>
+
+<div id="v-complementos-container"></div>
 
         <!-- Impuestos Retenidos Detalle -->
         <div class="mb-10 overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
@@ -206,6 +211,15 @@
     "c": "Depósitos en cuentas especiales para el ahorro"
 };
 
+const tipoRelacionMap = {
+"01": "Nota de crédito de los documentos relacionados",
+"02": "Nota de débito de los documentos relacionados",
+"03": "Devolución de mercancía sobre facturas o traslados previos",
+"04": "Sustitución de los CFDI previos",
+"05": "Traslados de mercancías facturados previamente",
+"06": "Factura generada por los traslados previos",
+"07": "CFDI por aplicación de anticipo"
+};
 
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => e.target.files[0] && processFile(e.target.files[0]);
@@ -256,10 +270,55 @@
             document.getElementById('v-folio').textContent = `Folio: ${getAt(ret, "FolioInt") || 'S/F'}`;
             document.getElementById('v-fecha').textContent = getAt(ret, "FechaExp");
             document.getElementById('v-uuid').textContent = getAt(tfd, "UUID") || "PENDIENTE";
+
+// --- LÓGICA DE CFDI RELACIONADOS (Con Clave y Descripción) ---
+const relNodo = findNodes(xml, "CfdiRetenRelacionados")[0];
+const relContainer = document.getElementById('v-relacionados-container');
+const relList = document.getElementById('v-relacionados-list');
+
+if (relNodo) {
+    relContainer.classList.remove('hidden');
+    const tipoRel = getAt(relNodo, "TipoRelacion");
+    // Concatenamos la clave (01, 04, etc) con su descripción
+    const descRel = tipoRelacionMap[tipoRel] 
+        ? `${tipoRel} - ${tipoRelacionMap[tipoRel]}` 
+        : `Tipo de Relación: ${tipoRel}`;
+    
+    // Extraer UUID si viene como atributo del nodo principal
+    const uuidDirecto = getAt(relNodo, "UUID");
+    
+    // Extraer UUIDs si vienen como nodos hijos
+    const hijosRel = findNodes(relNodo, "CfdiRetenRelacionado");
+
+    let htmlContent = "";
+
+    if (uuidDirecto) {
+        htmlContent = `
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <span class="text-[11px] font-bold text-slate-700 uppercase">${descRel}</span>
+                <span class="text-xs font-mono text-indigo-600 break-all">${uuidDirecto}</span>
+            </div>
+        `;
+    } else if (hijosRel.length > 0) {
+        htmlContent = hijosRel.map(u => `
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <span class="text-[11px] font-bold text-slate-700 uppercase">${descRel}</span>
+                <span class="text-xs font-mono text-indigo-600 break-all">${getAt(u, "UUID")}</span>
+            </div>
+        `).join('');
+    }
+
+    relList.innerHTML = htmlContent;
+} else {
+    if(relContainer) relContainer.classList.add('hidden');
+}
+
+
             document.getElementById('v-ejercicio').textContent = getAt(periodo, "Ejercicio");
             const mIni = parseInt(getAt(periodo, "MesIni"));
             const mFin = parseInt(getAt(periodo, "MesFin"));
             document.getElementById('v-meses').textContent = `${mesesMap[mIni-1]} a ${mesesMap[mFin-1]}`;
+
 
             // Totales Base
             document.getElementById('v-tot-op').textContent = `$${f(getAt(totales, "MontoTotOperacion"))}`;
