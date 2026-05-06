@@ -221,6 +221,13 @@ const tipoRelacionMap = {
 "07": "CFDI por aplicación de anticipo"
 };
 
+const formasPagoPlataforma = {
+    "01": "Efectivo", "02": "Cheque", "03": "Transferencia", "04": "Tarjeta Crédito",
+    "05": "Monedero", "06": "Dinero Electrónico", "07": "Tarjetas Digitales",
+    "08": "Intermediario Pagos", "09": "Tarjeta Débito", "31": "Intermediario"
+};
+
+
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = (e) => e.target.files[0] && processFile(e.target.files[0]);
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
@@ -229,7 +236,13 @@ const tipoRelacionMap = {
 
         function f(n) { return parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         function getAt(el, ...atts) { for(let a of atts) { let v = el?.getAttribute(a); if(v) return v; } return ''; }
-        function findNodes(parent, name) { return Array.from(parent.querySelectorAll('*')).filter(node => node.nodeName.toLowerCase().split(':').pop() === name.toLowerCase()); }
+function findNodes(parent, name) {
+    if (!parent) return [];
+    return Array.from(parent.querySelectorAll('*')).filter(node => {
+        const localName = node.nodeName.split(':').pop().toLowerCase();
+        return localName === name.toLowerCase();
+    });
+}
 
         function processFile(file) {
             const reader = new FileReader();
@@ -372,6 +385,57 @@ if (relNodo) {
                 {l: "Crédito Inst. Fin.", v: getAt(intHip, "CreditoDeInstFinanc")}
             ]);
 
+
+
+
+
+
+
+// --- COMPLEMENTO: SERVICIOS PLATAFORMAS TECNOLÓGICAS ---
+const plat = findNodes(xml, "ServiciosPlataformasTecnologicas")[0];
+if (plat) {
+    const detalles = findNodes(plat, "DetallesDelServicio");
+    const montoVentaSinIVA = parseFloat(getAt(plat, "MonTotServSIVA") || 0);
+    const ivaTrasladado = parseFloat(getAt(plat, "TotalIVATrasladado") || 0);
+    const totalRetenido = parseFloat(getAt(totales, "MontoTotRet") || 0);
+    
+    // Sumamos comisiones
+    let totalComision = 0;
+    detalles.forEach(d => {
+        const comisionNodo = findNodes(d, "ComisionDelServicio")[0];
+        if (comisionNodo) {
+            totalComision += parseFloat(getAt(comisionNodo, "Importe") || 0);
+        }
+    });
+
+    const netoEstimado = (montoVentaSinIVA + ivaTrasladado) - totalRetenido - totalComision;
+
+    // DECLARACIÓN EXPLÍCITA DE LA VARIABLE
+    const itemsPlat = [
+        { l: "Monto Total (Sin IVA)", v: `$${f(montoVentaSinIVA)}` },
+        { l: "IVA Trasladado", v: `$${f(ivaTrasladado)}` },
+        { l: "Comisión Total", v: `$${f(totalComision)}`, c: 'text-orange-600' },
+        { l: "Periodicidad", v: getAt(plat, "Periodicidad") === "02" ? "Mensual" : getAt(plat, "Periodicidad") },
+        { l: "Estimado a Depositar", v: `$${f(netoEstimado)}`, c: 'text-green-600 font-bold' }
+    ];
+
+    // Agregar método de pago si existe
+    if(detalles.length > 0) {
+        const formaPago = getAt(detalles[0], "FormaPagoServ");
+        if (formaPago) {
+            itemsPlat.push({ l: "Método de Cobro", v: formasPagoPlataforma[formaPago] || formaPago });
+        }
+    }
+
+    addComp(compContainer, "Servicios de Plataformas Tecnológicas", itemsPlat);
+}
+
+
+
+
+
+
+
             const div = findNodes(xml, "Dividendos")[0];
             if(div) {
                 const detDiv = findNodes(div, "DividOUtil")[0];
@@ -379,7 +443,6 @@ if (relNodo) {
                 // Obtenemos la clave y buscamos su descripción en el diccionario
     const cveCufin = getAt(detDiv, "CveTipDivOUtil");
     const descCufin = cufinMap[cveCufin] || `Clave ${cveCufin}`;
-
 
                 addComp(compContainer, "Dividendos / Utilidades", [
                     {l: "Origen de Utilidad", v: descCufin},
