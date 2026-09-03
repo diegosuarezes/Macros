@@ -255,6 +255,8 @@
                     <tr>
                         <th>Archivo</th>
                         <th>Met. Pago</th>
+                        <th>Forma Pago</th>
+                        <th>Uso CFDI</th>
                         <th>ObjetoImp</th>
                         <th>Tasa IVA</th>
                         <th>Importe IVA</th>
@@ -263,7 +265,7 @@
                 </thead>
                 <tbody id="resultBody">
                     <tr>
-                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
                             Carga una carpeta para ver el análisis en tiempo real.
                         </td>
                     </tr>
@@ -272,86 +274,105 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('xmlFolder').addEventListener('change', async function(e) {
-            const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.xml'));
-            const statusEl = document.getElementById('status');
-            const tbody = document.getElementById('resultBody');
-            
-            if (files.length === 0) {
-                statusEl.textContent = 'No se encontraron archivos .xml en la carpeta seleccionada.';
-                return;
+<script>
+    document.getElementById('xmlFolder').addEventListener('change', async function(e) {
+        const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.xml'));
+        const statusEl = document.getElementById('status');
+        const tbody = document.getElementById('resultBody');
+        
+        if (files.length === 0) {
+            statusEl.textContent = 'No se encontraron archivos .xml en la carpeta seleccionada.';
+            return;
+        }
+
+        statusEl.textContent = `Procesando ${files.length} archivos XML...`;
+        tbody.innerHTML = '';
+
+        let valid = 0;
+        let error = 0;
+
+        // Catálogo de Formas de Pago Bancarizadas válidas ante el SAT
+        const formasBancarizadas = ['02', '03', '04', '28', '29'];
+
+        const parser = new DOMParser();
+
+        for (const file of files) {
+            try {
+                const text = await file.text();
+                const xml = parser.parseFromString(text, "text/xml");
+
+                // Atributos de Comprobante
+                const comprobante = xml.querySelector('Comprobante') || xml.documentElement;
+                const metodoPago = comprobante.getAttribute('MetodoPago') || 'N/A';
+                const formaPago = comprobante.getAttribute('FormaPago') || 'N/A';
+                
+                // Extraer Uso de CFDI del nodo Receptor
+                const receptor = xml.querySelector('Receptor');
+                const usoCFDI = receptor ? (receptor.getAttribute('UsoCFDI') || 'N/A') : 'N/A';
+
+                // Extraer ObjetoImp del primer concepto
+                const concepto = xml.querySelector('Concepto');
+                const objetoImp = concepto ? concepto.getAttribute('ObjetoImp') : 'N/A';
+
+                // Extraer nodo Traslado de IVA (Impuesto 002)
+                const traslados = Array.from(xml.querySelectorAll('Traslado'));
+                const trasladoIVA = traslados.find(t => t.getAttribute('Impuesto') === '002');
+                
+                const tasaOCuota = trasladoIVA ? trasladoIVA.getAttribute('TasaOCuota') : '0.000000';
+                const importeIVA = trasladoIVA ? parseFloat(trasladoIVA.getAttribute('Importe') || 0) : 0;
+
+                // Criterios de validación para el prellenado del SAT
+                const esMetodoPUE = metodoPago === 'PUE';
+                const esFormaBancarizada = formasBancarizadas.includes(formaPago);
+                const esObjeto02 = objetoImp === '02';
+                const tieneTasaValida = tasaOCuota === '0.160000' || tasaOCuota === '0.080000';
+                const esUsoValido = usoCFDI !== 'S01' && usoCFDI !== 'CP01';
+
+                const cumplePrellenado = esMetodoPUE && esFormaBancarizada && esObjeto02 && tieneTasaValida && importeIVA > 0 && esUsoValido;
+
+                if (cumplePrellenado) valid++; else error++;
+
+                const row = document.createElement('tr');
+                row.className = cumplePrellenado ? "row-valid" : "row-error";
+
+                // Desglose de inconsistencias detectadas
+                const causaError = [];
+                if (!esMetodoPUE) causaError.push('Método Pago no es PUE');
+                if (!esFormaBancarizada) causaError.push(`Forma Pago (${formaPago}) no bancarizada/inválida`);
+                if (!esUsoValido) causaError.push(`Uso CFDI (${usoCFDI}) inválido`);
+                if (!esObjeto02) causaError.push('ObjetoImp distinto de 02');
+                if (!tieneTasaValida) causaError.push('Tasa no es 16%/8%');
+
+                row.innerHTML = `
+                    <td class="file-name" title="${file.name}">${file.name}</td>
+                    <td><span class="badge ${esMetodoPUE ? 'badge-pue' : 'badge-ppd'}">${metodoPago}</span></td>
+                    <td class="code-val ${esFormaBancarizada ? '' : 'text-error'}" title="${!esFormaBancarizada ? 'No es bancarizada (Ej. 01 Efectivo o 99)' : ''}">${formaPago}</td>
+                    <td class="code-val ${esUsoValido ? '' : 'text-error'}">${usoCFDI}</td>
+                    <td class="code-val ${esObjeto02 ? '' : 'text-error'}">${objetoImp}</td>
+                    <td class="code-val">${tasaOCuota}</td>
+                    <td class="code-val">$${importeIVA.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td>
+                        ${cumplePrellenado 
+                            ? '<span class="text-success">✔ Se prellena</span>' 
+                            : `<span class="text-error" title="${causaError.join(', ')}">⚠ Revisar (${causaError.join(', ')})</span>`
+                        }
+                    </td>
+                `;
+                tbody.appendChild(row);
+            } catch (err) {
+                error++;
+                const row = document.createElement('tr');
+                row.className = "row-error";
+                row.innerHTML = `<td class="file-name">${file.name}</td><td colspan="8" class="text-error">Error al leer estructura XML</td>`;
+                tbody.appendChild(row);
             }
+        }
 
-            statusEl.textContent = `Procesando ${files.length} archivos XML...`;
-            tbody.innerHTML = '';
-
-            let valid = 0;
-            let error = 0;
-
-            const parser = new DOMParser();
-
-            for (const file of files) {
-                try {
-                    const text = await file.text();
-                    const xml = parser.parseFromString(text, "text/xml");
-
-                    const comprobante = xml.querySelector('Comprobante') || xml.documentElement;
-                    const metodoPago = comprobante.getAttribute('MetodoPago') || 'N/A';
-                    
-                    const concepto = xml.querySelector('Concepto');
-                    const objetoImp = concepto ? concepto.getAttribute('ObjetoImp') : 'N/A';
-
-                    const traslados = Array.from(xml.querySelectorAll('Traslado'));
-                    const trasladoIVA = traslados.find(t => t.getAttribute('Impuesto') === '002');
-                    
-                    const tasaOCuota = trasladoIVA ? trasladoIVA.getAttribute('TasaOCuota') : '0.000000';
-                    const importeIVA = trasladoIVA ? parseFloat(trasladoIVA.getAttribute('Importe') || 0) : 0;
-
-                    const esMetodoPUE = metodoPago === 'PUE';
-                    const esObjeto02 = objetoImp === '02';
-                    const tieneTasaValida = tasaOCuota === '0.160000' || tasaOCuota === '0.080000';
-
-                    const cumplePrellenado = esMetodoPUE && esObjeto02 && tieneTasaValida && importeIVA > 0;
-
-                    if (cumplePrellenado) valid++; else error++;
-
-                    const row = document.createElement('tr');
-                    row.className = cumplePrellenado ? "row-valid" : "row-error";
-
-                    const causaError = [];
-                    if (!esMetodoPUE) causaError.push('Método Pago no es PUE');
-                    if (!esObjeto02) causaError.push('ObjetoImp distinto de 02');
-                    if (!tieneTasaValida) causaError.push('Tasa no es 16%/8%');
-
-                    row.innerHTML = `
-                        <td class="file-name" title="${file.name}">${file.name}</td>
-                        <td><span class="badge ${esMetodoPUE ? 'badge-pue' : 'badge-ppd'}">${metodoPago}</span></td>
-                        <td class="code-val ${esObjeto02 ? '' : 'text-error'}">${objetoImp}</td>
-                        <td class="code-val">${tasaOCuota}</td>
-                        <td class="code-val">$${importeIVA.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td>
-                            ${cumplePrellenado 
-                                ? '<span class="text-success">✔ Se prellena</span>' 
-                                : `<span class="text-error" title="${causaError.join(', ')}">⚠ Revisar (${causaError.join(', ')})</span>`
-                            }
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                } catch (err) {
-                    error++;
-                    const row = document.createElement('tr');
-                    row.className = "row-error";
-                    row.innerHTML = `<td class="file-name">${file.name}</td><td colspan="5" class="text-error">Error al leer estructura XML</td>`;
-                    tbody.appendChild(row);
-                }
-            }
-
-            document.getElementById('totalCount').textContent = files.length;
-            document.getElementById('validCount').textContent = valid;
-            document.getElementById('errorCount').textContent = error;
-            statusEl.textContent = `Procesamiento finalizado (${files.length} archivos).`;
-        });
-    </script>
+        document.getElementById('totalCount').textContent = files.length;
+        document.getElementById('validCount').textContent = valid;
+        document.getElementById('errorCount').textContent = error;
+        statusEl.textContent = `Procesamiento finalizado (${files.length} archivos).`;
+    });
+</script>
 </body>
 </html>
