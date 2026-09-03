@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor Masivo de XMLs - SAT CFDI 4.0</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --border-color: #475569;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #6366f1;
+            --accent-blue-hover: #4f46e5;
+            --success-bg: rgba(16, 185, 129, 0.15);
+            --success-text: #34d399;
+            --success-border: rgba(16, 185, 129, 0.3);
+            --warning-bg: rgba(245, 158, 11, 0.15);
+            --warning-text: #fbbf24;
+            --error-bg: rgba(239, 68, 68, 0.15);
+            --error-text: #f87171;
+            --error-border: rgba(239, 68, 68, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.75rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #818cf8;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background-color: rgba(15, 23, 42, 0.4);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-upload {
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-upload:hover {
+            background-color: var(--accent-blue-hover);
+        }
+
+        .status-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card.valid {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+        }
+
+        .stat-card.error {
+            background-color: var(--error-bg);
+            border-color: var(--error-border);
+        }
+
+        .stat-title {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card.valid .stat-title { color: var(--success-text); }
+        .stat-card.error .stat-title { color: var(--error-text); }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-card.valid .stat-value { color: var(--success-text); }
+        .stat-card.error .stat-value { color: var(--error-text); }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-height: 520px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            background-color: var(--bg-primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr.row-valid:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        tr.row-error {
+            background-color: var(--error-bg);
+        }
+
+        tr.row-error:hover {
+            background-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-pue { background-color: rgba(16, 185, 129, 0.2); color: var(--success-text); }
+        .badge-ppd { background-color: var(--warning-bg); color: var(--warning-text); }
+
+        .code-val {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .text-error { color: var(--error-text); font-weight: bold; }
+        .text-success { color: var(--success-text); font-weight: 600; }
+        .file-name { font-family: monospace; font-size: 0.8rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Auditor Masivo de Estructura XML (CFDI 4.0)</h1>
+            <p>Selecciona la carpeta local con tus facturas recibidas para auditar el traslado e impuestos de IVA.</p>
+        </div>
+
+        <div class="controls">
+            <label class="btn-upload">
+                📁 Seleccionar Carpeta de XMLs
+                <input type="file" id="xmlFolder" webkitdirectory directory multiple accept=".xml">
+            </label>
+            <span id="status" class="status-text">Sin carpeta seleccionada</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-title">Total Facturas</span>
+                <span id="totalCount" class="stat-value">0</span>
+            </div>
+            <div class="stat-card valid">
+                <span class="stat-title">Válidas para SAT</span>
+                <span id="validCount" class="stat-value">0</span>
+            </div>
+            <div class="stat-card error">
+                <span class="stat-title">Con Posible Error / Excluidas</span>
+                <span id="errorCount" class="stat-value">0</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Met. Pago</th>
+                        <th>ObjetoImp</th>
+                        <th>Tasa IVA</th>
+                        <th>Importe IVA</th>
+                        <th>Estatus SAT</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            Carga una carpeta para ver el análisis en tiempo real.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('xmlFolder').addEventListener('change', async function(e) {
+            const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.xml'));
+            const statusEl = document.getElementById('status');
+            const tbody = document.getElementById('resultBody');
+            
+            if (files.length === 0) {
+                statusEl.textContent = 'No se encontraron archivos .xml en la carpeta seleccionada.';
+                return;
+            }
+
+            statusEl.textContent = `Procesando ${files.length} archivos XML...`;
+            tbody.innerHTML = '';
+
+            let valid = 0;
+            let error = 0;
+
+            const parser = new DOMParser();
+
+            for (const file of files) {
+                try {
+                    const text = await file.text();
+                    const xml = parser.parseFromString(text, "text/xml");
+
+                    const comprobante = xml.querySelector('Comprobante') || xml.documentElement;
+                    const metodoPago = comprobante.getAttribute('MetodoPago') || 'N/A';
+                    
+                    const concepto = xml.querySelector('Concepto');
+                    const objetoImp = concepto ? concepto.getAttribute('ObjetoImp') : 'N/A';
+
+                    const traslados = Array.from(xml.querySelectorAll('Traslado'));
+                    const trasladoIVA = traslados.find(t => t.getAttribute('Impuesto') === '002');
+                    
+                    const tasaOCuota = trasladoIVA ? trasladoIVA.getAttribute('TasaOCuota') : '0.000000';
+                    const importeIVA = trasladoIVA ? parseFloat(trasladoIVA.getAttribute('Importe') || 0) : 0;
+
+                    const esMetodoPUE = metodoPago === 'PUE';
+                    const esObjeto02 = objetoImp === '02';
+                    const tieneTasaValida = tasaOCuota === '0.160000' || tasaOCuota === '0.080000';
+
+                    const cumplePrellenado = esMetodoPUE && esObjeto02 && tieneTasaValida && importeIVA > 0;
+
+                    if (cumplePrellenado) valid++; else error++;
+
+                    const row = document.createElement('tr');
+                    row.className = cumplePrellenado ? "row-valid" : "row-error";
+
+                    const causaError = [];
+                    if (!esMetodoPUE) causaError.push('Método Pago no es PUE');
+                    if (!esObjeto02) causaError.push('ObjetoImp distinto de 02');
+                    if (!tieneTasaValida) causaError.push('Tasa no es 16%/8%');
+
+                    row.innerHTML = `
+                        <td class="file-name" title="${file.name}">${file.name}</td>
+                        <td><span class="badge ${esMetodoPUE ? 'badge-pue' : 'badge-ppd'}">${metodoPago}</span></td>
+                        <td class="code-val ${esObjeto02 ? '' : 'text-error'}">${objetoImp}</td>
+                        <td class="code-val">${tasaOCuota}</td>
+                        <td class="code-val">$${importeIVA.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>
+                            ${cumplePrellenado 
+                                ? '<span class="text-success">✔ Se prellena</span>' 
+                                : `<span class="text-error" title="${causaError.join(', ')}">⚠ Revisar (${causaError.join(', ')})</span>`
+                            }
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                } catch (err) {
+                    error++;
+                    const row = document.createElement('tr');
+                    row.className = "row-error";
+                    row.innerHTML = `<td class="file-name">${file.name}</td><td colspan="5" class="text-error">Error al leer estructura XML</td>`;
+                    tbody.appendChild(row);
+                }
+            }
+
+            document.getElementById('totalCount').textContent = files.length;
+            document.getElementById('validCount').textContent = valid;
+            document.getElementById('errorCount').textContent = error;
+            statusEl.textContent = `Procesamiento finalizado (${files.length} archivos).`;
+        });
+    </script>
+</body>
+</html>
