@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiador de Auxiliares Aspel COI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 x=%222%22 font-size=%2285%22>📑</text></svg>">
+    <!-- Carga de librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed #94a3b8;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+        body {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans text-slate-900">
+
+    <div class="max-w-5xl mx-auto py-10 px-4">
+        <!-- Encabezado -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-slate-800 mb-2">Limpiador de Auxiliares COI</h1>
+            <p class="text-slate-600">Convierte los reportes de Auxiliares por Cuenta de Aspel COI en una base de datos limpia e individualizada por movimiento.</p>
+        </div>
+
+        <!-- Panel de Configuración -->
+        <div class="bg-white rounded-xl p-6 shadow-md border border-slate-200 mb-6 text-sm">
+            <h2 class="text-lg font-bold mb-3 text-blue-700 border-b pb-2 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Parámetros del Reporte
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Estructura de Cuentas:</label>
+                    <input type="text" id="structureInput" value="XXXX-XXX-XXX-XXX" 
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                    <p class="text-xs text-slate-500 mt-1">Sustituye los dígitos por 'X'. (Ejemplo: 1100-001-000-000 -> XXXX-XXX-XXX-XXX).</p>
+                </div>
+                <div class="flex items-center pt-5">
+                    <label class="flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="includeInitialBalance" class="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" checked>
+                        <span class="ml-2 text-slate-700 font-medium">Incluir filas de "Saldo Inicial" por cuenta</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zona de Carga de Archivo -->
+        <div id="dropZone" class="drop-zone bg-white rounded-xl p-12 text-center cursor-pointer shadow-md hover:shadow-lg transition-all">
+            <div class="flex flex-col items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-lg font-bold text-slate-700">Arrastra tu Auxiliar de COI en Excel aquí</p>
+                <p class="text-slate-500 text-sm mt-1">o haz clic para buscar el archivo (.xlsx / .xls)</p>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls">
+            </div>
+        </div>
+
+        <!-- Estado y Botón de Descarga -->
+        <div id="statusContainer" class="mt-6 hidden">
+            <div class="bg-white rounded-xl p-5 shadow-md border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center">
+                    <div id="loader" class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                    <span id="statusText" class="font-semibold text-slate-700">Procesando registros de auxiliar...</span>
+                </div>
+                <button id="downloadBtn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Descargar Auxiliar Limpio (.xlsx)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const structureInput = document.getElementById('structureInput');
+    const includeInitialBalance = document.getElementById('includeInitialBalance');
+    const statusContainer = document.getElementById('statusContainer');
+    const statusText = document.getElementById('statusText');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const loader = document.getElementById('loader');
+
+    let finalBlob = null;
+    let originalFileName = "";
+
+    // Eventos Drag and Drop
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        originalFileName = file.name.replace(/\.[^/.]+$/, "");
+        statusContainer.classList.remove('hidden');
+        downloadBtn.classList.add('hidden');
+        loader.classList.remove('hidden');
+        statusText.innerText = "Analizando estructura del reporte...";
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const buffer = e.target.result;
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(buffer);
+                processAuxiliar(workbook);
+            } catch (err) {
+                statusText.innerText = "Error al procesar el archivo. Asegúrate de que sea un archivo de Excel válido.";
+                loader.classList.add('hidden');
+                console.error(err);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // Convierte y valida valores numéricos
+    function getNumericValue(cell) {
+        if (!cell) return 0;
+        const val = cell.value;
+        if (val === null || val === undefined || val === "") return 0;
+        if (typeof val === 'object' && val.result !== undefined) return getNumericValue({ value: val.result });
+        if (typeof val === 'number') return val;
+        let str = val.toString().replace(/[$,\s]/g, "");
+        if (str.startsWith('(') && str.endsWith(')')) str = '-' + str.substring(1, str.length - 1);
+        let num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    }
+
+    // Formatea fechas
+    function formatDateValue(val) {
+        if (!val) return "";
+        if (val instanceof Date) {
+            const d = String(val.getDate()).padStart(2, '0');
+            const m = String(val.getMonth() + 1).padStart(2, '0');
+            const y = val.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+        return val.toString().trim();
+    }
+
+async function processAuxiliar(oldWb) {
+    const worksheet = oldWb.worksheets[0];
+    const structPattern = structureInput.value.trim();
+    const regex = new RegExp("^(" + structPattern.replace(/X/g, '\\d') + ")");
+    const accountLen = structPattern.length;
+    const keepInitialBalance = includeInitialBalance.checked;
+
+    const newWb = new ExcelJS.Workbook();
+    const newWs = newWb.addWorksheet('Auxiliar Limpio');
+
+    // Encabezados
+    const headers = [
+        "Cuenta", 
+        "Descripción Cuenta", 
+        "Fecha", 
+        "Tipo Póliza", 
+        "Número Póliza", 
+        "Concepto del Movimiento", 
+        "Cargos", 
+        "Abonos", 
+        "Saldo Final"
+    ];
+
+    const headRow = newWs.addRow(headers);
+    headRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10, name: 'Arial' };
+    headRow.eachCell(c => {
+        c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    let currentAccount = "";
+    let currentAccountDesc = "";
+    let processedRowsCount = 0;
+
+    // Helper ultra rápido para obtener el primer número válido por índice de columna (1-based: A=1, B=2, C=3, etc.)
+    function getValFromCols(row, colIndices) {
+        for (let i = 0; i < colIndices.length; i++) {
+            let val = getNumericValue(row.getCell(colIndices[i]));
+            if (val !== 0) return val;
+        }
+        return 0;
+    }
+
+    // Iteración directa sin generar celdas vacías infinitas
+    worksheet.eachRow({ includeEmpty: false }, (row) => {
+        let valA = (row.getCell(1).value || "").toString().trim(); // Columna A
+        let valB = (row.getCell(2).value || "").toString().trim(); // Columna B
+        let valC = (row.getCell(3).value || "").toString().trim(); // Columna C
+        let valD = (row.getCell(4).value || "").toString().trim(); // Columna D
+
+        let rowTextUpper = `${valA} ${valB} ${valC} ${valD}`.toUpperCase();
+
+        // Omitir basura y encabezados de reporte
+        if (rowTextUpper.includes("NO. DE CUENTA") || 
+            rowTextUpper.includes("REPORTE DE AUXILIARES") || 
+            rowTextUpper.includes("CUENTAS CON MONEDA") || 
+            rowTextUpper.includes("TOTAL DE CARGOS") ||
+            rowTextUpper.includes("USUARIO:") ||
+            rowTextUpper.includes("FECHA Y HORA:")) {
+            return;
+        }
+
+        // 1. Identificar Cuenta Contable
+        if (regex.test(valA)) {
+            currentAccount = valA.substring(0, accountLen).trim();
+            currentAccountDesc = valC || valB;
+
+            // Saldo Inicial (Checa Columna H=8, G=7, I=9)
+            if (keepInitialBalance) {
+                let saldoIniVal = getValFromCols(row, [8, 7, 9]);
+                if (saldoIniVal !== 0) {
+                    const addedRow = newWs.addRow([
+                        currentAccount,
+                        currentAccountDesc,
+                        "",
+                        "",
+                        "",
+                        "SALDO INICIAL",
+                        0,
+                        0,
+                        saldoIniVal
+                    ]);
+                    applyRowFormatting(addedRow);
+                    processedRowsCount++;
+                }
+            }
+            return;
+        }
+
+        if (!currentAccount) return;
+
+        // 2. Identificar Movimientos por Fecha (Columna C=3)
+        let fechaRaw = row.getCell(3).value;
+        let fechaStr = (fechaRaw || "").toString().trim();
+        let esFechaValida = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(fechaStr) || fechaRaw instanceof Date;
+
+        if (esFechaValida) {
+            let fechaFormatted = formatDateValue(fechaRaw);
+
+            // Índices de columnas en Excel: J=10, I=9, L=12, K=11, M=13, N=14, H=8, G=7
+            let cargos = getValFromCols(row, [10, 9]);
+            let abonos = getValFromCols(row, [12, 11]);
+            let saldoFinal = getValFromCols(row, [13, 14, 8, 7]);
+
+            const addedRow = newWs.addRow([
+                currentAccount,
+                currentAccountDesc,
+                fechaFormatted,
+                valA, // Tipo Póliza
+                valB, // Número Póliza
+                valD, // Concepto
+                cargos,
+                abonos,
+                saldoFinal
+            ]);
+
+            applyRowFormatting(addedRow);
+            processedRowsCount++;
+        }
+    });
+
+    function applyRowFormatting(addedRow) {
+        addedRow.font = { size: 9, name: 'Arial' };
+        addedRow.getCell(1).alignment = { horizontal: 'center' };
+        addedRow.getCell(3).alignment = { horizontal: 'center' };
+        addedRow.getCell(4).alignment = { horizontal: 'center' };
+        addedRow.getCell(5).alignment = { horizontal: 'center' };
+
+        addedRow.getCell(7).numFmt = '#,##0.00;[Red]-#,##0.00';
+        addedRow.getCell(8).numFmt = '#,##0.00;[Red]-#,##0.00';
+        addedRow.getCell(9).numFmt = '#,##0.00;[Red]-#,##0.00';
+    }
+
+    newWs.columns = [
+        { width: 22 }, // Cuenta
+        { width: 35 }, // Descripción Cuenta
+        { width: 14 }, // Fecha
+        { width: 12 }, // Tipo
+        { width: 14 }, // Número
+        { width: 55 }, // Concepto
+        { width: 16 }, // Cargos
+        { width: 16 }, // Abonos
+        { width: 16 }  // Saldo
+    ];
+
+    finalBlob = await newWb.xlsx.writeBuffer();
+    loader.classList.add('hidden');
+    statusText.innerText = `¡Proceso completado! Se procesaron ${processedRowsCount} registros correctamente.`;
+    downloadBtn.classList.remove('hidden');
+}
+
+    // Descarga del archivo resultado
+    downloadBtn.addEventListener('click', () => {
+        if (finalBlob) {
+            const blob = new Blob([finalBlob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${originalFileName}_Limpio.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    });
+</script>
+
+</body>
+</html>
